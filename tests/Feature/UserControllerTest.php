@@ -115,4 +115,34 @@ class UserControllerTest extends TestCase
             'id' => $admin->id,
         ]);
     }
+
+    public function test_admin_cannot_create_user_with_invalid_role(): void
+    {
+        $admin = User::first();
+
+        $response = $this->actingAs($admin)->post('/users', [
+            'name' => 'Invalid Role User',
+            'email' => 'invalidrole@asada.org',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => 'super-hacker-role',
+            'is_active' => '1',
+        ]);
+
+        $response->assertSessionHasErrors(['role']);
+        $this->assertDatabaseMissing('users', [
+            'email' => 'invalidrole@asada.org',
+        ]);
+    }
+
+    public function test_admin_accessing_non_existent_user_redirects_with_error(): void
+    {
+        $admin = User::first();
+
+        $response = $this->actingAs($admin)->get('/users/999/edit');
+
+        $response->assertRedirect(route('users.index'));
+        $response->assertSessionHas('error', 'El usuario no existe.');
+    }
 }
+
