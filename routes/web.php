@@ -19,7 +19,9 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::resource('users', UserController::class)->except(['show']);
+    Route::resource('users', UserController::class)->except(['show'])->missing(function () {
+        return redirect()->route('users.index')->with('error', 'El usuario no existe.');
+    });
 });
 
 require __DIR__.'/auth.php';
