@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -22,6 +23,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('users', UserController::class)->except(['show'])->missing(function () {
         return redirect()->route('users.index')->with('error', 'El usuario no existe.');
     });
+});
+Route::middleware(['auth'])->group(function () {
+    Route::middleware(['role:admin|administration'])->group(function () {
+        Route::get('projects/create', [ProjectController::class, 'create'])->name('projects.create');
+        Route::post('projects', [ProjectController::class, 'store'])->name('projects.store');
+    });
+
+    Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
+    Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
 });
 
 require __DIR__.'/auth.php';
