@@ -17,6 +17,11 @@ class Project extends Model
         'criticality',
         'priority',
         'user_id',
+        'technical_justification',
+        'estimated_cost',
+        'impact',
+        'risk',
+        'evidence_path',
     ];
 
     public function user(): BelongsTo

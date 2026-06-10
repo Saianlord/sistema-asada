@@ -16,6 +16,12 @@
                 </a>
             </div>
 
+            @if (session('success'))
+                <div class="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg text-sm font-medium">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-8">
                 <div class="flex justify-between items-start border-b border-slate-100 pb-6">
                     <div>
@@ -54,7 +60,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-b border-slate-100 pb-6">
                         <div>
                             <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Criticidad</h3>
                             <div class="mt-2">
@@ -80,6 +86,75 @@
                                 @endif
                             </div>
                         </div>
+                    </div>
+
+                    <div class="pt-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-slate-900">Información de Respaldo</h3>
+                            @hasanyrole('admin|operations')
+                            @if ($project->evidence_path)
+                                <a href="{{ route('projects.support.edit', $project) }}" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-900 transition-colors">
+                                    Editar Información
+                                </a>
+                            @endif
+                            @endhasanyrole
+                        </div>
+
+                        @if ($project->evidence_path)
+                            <div class="space-y-4">
+                                <div>
+                                    <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Justificación Técnica</h4>
+                                    <div class="mt-2 text-slate-700 whitespace-pre-line text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                        {{ $project->technical_justification }}
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Costo Estimado</h4>
+                                        <p class="text-lg font-bold text-slate-900 mt-1">₡{{ number_format($project->estimated_cost, 2) }}</p>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Evidencia Inicial</h4>
+                                        <div class="mt-2 flex items-center p-3 bg-slate-50 border border-slate-100 rounded-md">
+                                            <svg class="h-5 w-5 text-slate-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            <a href="{{ asset('storage/' . $project->evidence_path) }}" target="_blank" class="text-sm font-medium text-blue-600 hover:text-blue-800 underline">
+                                                Ver Evidencia
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Impacto</h4>
+                                        <div class="mt-2 text-slate-700 whitespace-pre-line text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                            {{ $project->impact }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Riesgo</h4>
+                                        <div class="mt-2 text-slate-700 whitespace-pre-line text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                            {{ $project->risk }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <div class="text-center p-6 bg-slate-50 border border-dashed border-slate-300 rounded-lg">
+                                <p class="text-sm text-slate-600 mb-4">Esta iniciativa aún no cuenta con información de respaldo técnica.</p>
+                                @hasanyrole('admin|operations')
+                                <a href="{{ route('projects.support.edit', $project) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                                    <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Adjuntar Información
+                                </a>
+                                @endhasanyrole
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
