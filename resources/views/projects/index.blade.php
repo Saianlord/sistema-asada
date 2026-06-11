@@ -136,6 +136,7 @@
                                         @else
                                             No hay iniciativas de proyectos registradas.
                                         @endif
+                                        No hay iniciativas de proyectos registradas.
                                     </td>
                                 </tr>
                             @endforelse

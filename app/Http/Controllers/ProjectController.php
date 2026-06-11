@@ -27,6 +27,9 @@ class ProjectController extends Controller
         }
 
         $projects = $query->get();
+    public function index(): View
+    {
+        $projects = Project::with('user')->get();
 
         return view('projects.index', compact('projects'));
     }
