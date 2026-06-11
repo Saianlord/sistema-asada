@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProjectRequest;
 use App\Models\Project;
+use App\Http\Requests\UpdateProjectRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -56,5 +57,30 @@ class ProjectController extends Controller
     public function show(Project $project): View
     {
         return view('projects.show', compact('project'));
+    }
+
+    public function edit(Project $project)
+    {
+        if (in_array($project->status, ['approved', 'closed'])) {
+            return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+        }
+
+        return view('projects.edit', compact('project'));
+    }
+
+    public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
+    {
+        if (in_array($project->status, ['approved', 'closed'])) {
+            return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+        }
+
+        $project->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'criticality' => $request->criticality,
+            'priority' => $request->priority,
+        ]);
+
+        return redirect()->route('projects.show', $project)->with('success', 'Iniciativa de proyecto actualizada exitosamente.');
     }
 }

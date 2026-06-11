@@ -242,4 +242,132 @@ class ProjectControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('No se encontraron proyectos que coincidan con los filtros seleccionados.');
     }
+
+    public function test_authorized_user_can_access_edit_page_if_pending(): void
+    {
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Project Pending Edit',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.edit', $project));
+        $response->assertStatus(200);
+        $response->assertSee('Project Pending Edit');
+    }
+
+    public function test_authorized_user_cannot_access_edit_page_if_approved_or_closed(): void
+    {
+        $admin = User::first();
+        $projectApproved = Project::create([
+            'title' => 'Project Approved Edit',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+        ]);
+        $projectClosed = Project::create([
+            'title' => 'Project Closed Edit',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'closed',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.edit', $projectApproved));
+        $response->assertRedirect(route('projects.show', $projectApproved));
+        $response->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+
+        $response = $this->actingAs($admin)->get(route('projects.edit', $projectClosed));
+        $response->assertRedirect(route('projects.show', $projectClosed));
+        $response->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+    }
+
+    public function test_authorized_user_can_update_project(): void
+    {
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Old Title',
+            'description' => 'Old description',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->put(route('projects.update', $project), [
+            'title' => 'New Title',
+            'description' => 'New description',
+            'criticality' => 'high',
+            'priority' => 'medium',
+        ]);
+
+        $response->assertRedirect(route('projects.show', $project));
+        $response->assertSessionHas('success', 'Iniciativa de proyecto actualizada exitosamente.');
+
+        $project->refresh();
+        $this->assertEquals('New Title', $project->title);
+        $this->assertEquals('New description', $project->description);
+        $this->assertEquals('high', $project->criticality);
+        $this->assertEquals('medium', $project->priority);
+    }
+
+    public function test_unauthorized_user_cannot_access_edit_or_update(): void
+    {
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Project Edit Auth Check',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $operator = User::factory()->create();
+        $operator->assignRole('operations');
+
+        $response = $this->actingAs($operator)->get(route('projects.edit', $project));
+        $response->assertStatus(403);
+
+        $response = $this->actingAs($operator)->put(route('projects.update', $project), [
+            'title' => 'Hacked Title',
+            'description' => 'Hacked description',
+            'criticality' => 'high',
+            'priority' => 'high',
+        ]);
+        $response->assertStatus(403);
+    }
+
+    public function test_update_restricted_for_approved_or_closed_projects(): void
+    {
+        $admin = User::first();
+        $projectApproved = Project::create([
+            'title' => 'Approved Title',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($admin)->put(route('projects.update', $projectApproved), [
+            'title' => 'Changed Title',
+            'description' => 'Desc changed',
+            'criticality' => 'high',
+            'priority' => 'high',
+        ]);
+
+        $response->assertRedirect(route('projects.show', $projectApproved));
+        $response->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+
+        $projectApproved->refresh();
+        $this->assertEquals('Approved Title', $projectApproved->title);
+    }
 }
