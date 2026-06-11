@@ -30,6 +30,51 @@
             </div>
             @endhasanyrole
 
+            <div class="bg-white p-6 shadow-sm rounded-lg border border-slate-200 mb-6">
+                <form method="GET" action="{{ route('projects.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <x-input-label for="status" value="Estado" />
+                        <select id="status" name="status" class="block mt-1 w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-slate-700 text-sm">
+                            <option value="">Todos</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pendiente</option>
+                            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Aprobado</option>
+                            <option value="closed" {{ request('status') === 'closed' ? 'selected' : '' }}>Cerrado</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <x-input-label for="criticality" value="Criticidad" />
+                        <select id="criticality" name="criticality" class="block mt-1 w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-slate-700 text-sm">
+                            <option value="">Todas</option>
+                            <option value="low" {{ request('criticality') === 'low' ? 'selected' : '' }}>Baja</option>
+                            <option value="medium" {{ request('criticality') === 'medium' ? 'selected' : '' }}>Media</option>
+                            <option value="high" {{ request('criticality') === 'high' ? 'selected' : '' }}>Alta</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <x-input-label for="priority" value="Prioridad" />
+                        <select id="priority" name="priority" class="block mt-1 w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-slate-700 text-sm">
+                            <option value="">Todas</option>
+                            <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Baja</option>
+                            <option value="medium" {{ request('priority') === 'medium' ? 'selected' : '' }}>Media</option>
+                            <option value="high" {{ request('priority') === 'high' ? 'selected' : '' }}>Alta</option>
+                        </select>
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <button type="submit" class="flex-1 inline-flex justify-center items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                            Filtrar
+                        </button>
+                        @if(request()->anyFilled(['status', 'criticality', 'priority']))
+                            <a href="{{ route('projects.index') }}" class="inline-flex justify-center items-center px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium rounded-lg transition-colors">
+                                Limpiar
+                            </a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+
             <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200">
@@ -86,6 +131,11 @@
                             @empty
                                 <tr>
                                     <td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500">
+                                        @if(request()->anyFilled(['status', 'criticality', 'priority']))
+                                            No se encontraron proyectos que coincidan con los filtros seleccionados.
+                                        @else
+                                            No hay iniciativas de proyectos registradas.
+                                        @endif
                                         No hay iniciativas de proyectos registradas.
                                     </td>
                                 </tr>

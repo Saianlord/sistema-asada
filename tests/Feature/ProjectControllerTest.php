@@ -121,4 +121,125 @@ class ProjectControllerTest extends TestCase
         $response->assertSee('Project Delta');
         $response->assertSee('Delta description');
     }
+
+    public function test_filtering_by_status(): void
+    {
+        $admin = User::first();
+        Project::create([
+            'title' => 'Project Pending',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+        Project::create([
+            'title' => 'Project Approved',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.index', ['status' => 'approved']));
+
+        $response->assertStatus(200);
+        $response->assertSee('Project Approved');
+        $response->assertDontSee('Project Pending');
+    }
+
+    public function test_filtering_by_criticality(): void
+    {
+        $admin = User::first();
+        Project::create([
+            'title' => 'Project High Crit',
+            'description' => 'Desc',
+            'criticality' => 'high',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+        Project::create([
+            'title' => 'Project Low Crit',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.index', ['criticality' => 'high']));
+
+        $response->assertStatus(200);
+        $response->assertSee('Project High Crit');
+        $response->assertDontSee('Project Low Crit');
+    }
+
+    public function test_filtering_by_priority(): void
+    {
+        $admin = User::first();
+        Project::create([
+            'title' => 'Project High Prio',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'high',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+        Project::create([
+            'title' => 'Project Low Prio',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.index', ['priority' => 'high']));
+
+        $response->assertStatus(200);
+        $response->assertSee('Project High Prio');
+        $response->assertDontSee('Project Low Prio');
+    }
+
+    public function test_combining_multiple_filters(): void
+    {
+        $admin = User::first();
+        Project::create([
+            'title' => 'Target Project',
+            'description' => 'Desc',
+            'criticality' => 'high',
+            'priority' => 'high',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+        ]);
+        Project::create([
+            'title' => 'Other Project',
+            'description' => 'Desc',
+            'criticality' => 'high',
+            'priority' => 'high',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.index', [
+            'status' => 'approved',
+            'criticality' => 'high',
+            'priority' => 'high',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('Target Project');
+        $response->assertDontSee('Other Project');
+    }
+
+    public function test_no_results_shows_message(): void
+    {
+        $admin = User::first();
+        $response = $this->actingAs($admin)->get(route('projects.index', ['status' => 'closed']));
+
+        $response->assertStatus(200);
+        $response->assertSee('No se encontraron proyectos que coincidan con los filtros seleccionados.');
+    }
 }
