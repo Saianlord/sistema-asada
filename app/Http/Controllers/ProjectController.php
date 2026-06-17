@@ -28,9 +28,6 @@ class ProjectController extends Controller
         }
 
         $projects = $query->get();
-    public function index(): View
-    {
-        $projects = Project::with('user')->get();
 
         return view('projects.index', compact('projects'));
     }
@@ -56,6 +53,8 @@ class ProjectController extends Controller
 
     public function show(Project $project): View
     {
+        $project->load(['evaluations.user']);
+
         return view('projects.show', compact('project'));
     }
 

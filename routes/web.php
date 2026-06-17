@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectSupportController;
+use App\Http\Controllers\ProjectEvaluationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -33,17 +34,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('projects/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
         Route::put('projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     });
-    });
 
     Route::middleware(['role:admin|operations'])->group(function () {
         Route::get('projects/{project}/support/edit', [ProjectSupportController::class, 'edit'])->name('projects.support.edit');
         Route::put('projects/{project}/support', [ProjectSupportController::class, 'update'])->name('projects.support.update');
     });
-    Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
-    Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
-});
 
-require __DIR__.'/auth.php';
+    Route::middleware(['role:admin|junta'])->group(function () {
+        Route::get('projects/{project}/evaluate', [ProjectEvaluationController::class, 'create'])->name('evaluations.create');
+        Route::post('projects/{project}/evaluate', [ProjectEvaluationController::class, 'store'])->name('evaluations.store');
+        Route::get('projects/{project}/evaluations/{evaluation}/edit', [ProjectEvaluationController::class, 'edit'])->name('evaluations.edit');
+        Route::put('projects/{project}/evaluations/{evaluation}', [ProjectEvaluationController::class, 'update'])->name('evaluations.update');
+    });
 
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
