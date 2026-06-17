@@ -14,16 +14,38 @@
                     </svg>
                     Volver al listado
                 </a>
-                @hasanyrole('admin|administration')
-                @if (!in_array($project->status, ['approved', 'closed']))
-                    <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
-                        <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Editar Iniciativa
-                    </a>
-                @endif
-                @endhasanyrole
+                <div class="flex items-center gap-3">
+                    @hasanyrole('admin|junta')
+                    @php
+                        $userEvaluation = $project->evaluations->where('user_id', auth()->id())->first();
+                    @endphp
+                    @if ($userEvaluation)
+                        <a href="{{ route('evaluations.edit', [$project, $userEvaluation]) }}" class="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                            <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Editar Mi Evaluación
+                        </a>
+                    @else
+                        <a href="{{ route('evaluations.create', $project) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                            <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            Evaluar Proyecto
+                        </a>
+                    @endif
+                    @endhasanyrole
+                    @hasanyrole('admin|administration')
+                    @if (!in_array($project->status, ['approved', 'closed']))
+                        <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                            <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Editar Iniciativa
+                        </a>
+                    @endif
+                    @endhasanyrole
+                </div>
             </div>
 
             @if (session('success'))
@@ -35,6 +57,12 @@
             @if (session('error'))
                 <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm font-medium">
                     {{ session('error') }}
+                </div>
+            @endif
+
+            @if (session('info'))
+                <div class="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm font-medium">
+                    {{ session('info') }}
                 </div>
             @endif
 
@@ -169,6 +197,76 @@
                                     Adjuntar Información
                                 </a>
                                 @endhasanyrole
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="pt-6 border-t border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Evaluaciones</h3>
+
+                        @if ($project->evaluations->count() > 0)
+                            <div class="space-y-4">
+                                @foreach ($project->evaluations as $evaluation)
+                                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-5">
+                                        <div class="flex justify-between items-center mb-3">
+                                            <p class="text-sm font-semibold text-slate-800">{{ $evaluation->user->name }}</p>
+                                            <div class="flex items-center gap-3">
+                                                @if ($evaluation->viability_status === 'viable')
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">Viable</span>
+                                                @elseif ($evaluation->viability_status === 'conditional')
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Condicional</span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">No Viable</span>
+                                                @endif
+                                                <span class="text-sm font-bold text-slate-900">{{ number_format($evaluation->average_score, 2) }}/10</span>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-4 gap-4">
+                                            <div class="text-center">
+                                                <p class="text-xs text-slate-500 uppercase tracking-wider">Técnico</p>
+                                                <p class="text-lg font-bold text-slate-900">{{ $evaluation->technical_score }}</p>
+                                            </div>
+                                            <div class="text-center">
+                                                <p class="text-xs text-slate-500 uppercase tracking-wider">Financiero</p>
+                                                <p class="text-lg font-bold text-slate-900">{{ $evaluation->financial_score }}</p>
+                                            </div>
+                                            <div class="text-center">
+                                                <p class="text-xs text-slate-500 uppercase tracking-wider">Operativo</p>
+                                                <p class="text-lg font-bold text-slate-900">{{ $evaluation->operational_score }}</p>
+                                            </div>
+                                            <div class="text-center">
+                                                <p class="text-xs text-slate-500 uppercase tracking-wider">Normativo</p>
+                                                <p class="text-lg font-bold text-slate-900">{{ $evaluation->regulatory_score }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+
+                                @if ($project->evaluations->count() > 0)
+                                    <div class="bg-white border-2 border-blue-200 rounded-lg p-5 mt-4">
+                                        <div class="flex justify-between items-center">
+                                            <div>
+                                                <p class="text-sm font-bold text-slate-900 uppercase tracking-wider">Dictamen General de Viabilidad</p>
+                                                <p class="text-xs text-slate-500 mt-1">Basado en {{ $project->evaluations->count() }} evaluación(es)</p>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                @if ($project->viability_label === 'viable')
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-800">Viable</span>
+                                                @elseif ($project->viability_label === 'conditional')
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800">Condicional</span>
+                                                @else
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-800">No Viable</span>
+                                                @endif
+                                                <span class="text-xl font-bold text-blue-700">{{ number_format($project->average_viability_score, 2) }}/10</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @else
+                            <div class="text-center p-6 bg-slate-50 border border-dashed border-slate-300 rounded-lg">
+                                <p class="text-sm text-slate-600">Este proyecto aún no cuenta con evaluaciones registradas.</p>
+                                <p class="text-xs text-slate-400 mt-1">No es posible generar un dictamen de viabilidad sin evaluaciones.</p>
                             </div>
                         @endif
                     </div>
