@@ -82,4 +82,14 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.show', $project)->with('success', 'Iniciativa de proyecto actualizada exitosamente.');
     }
+
+    public function prioritization(): View
+    {
+        $projects = Project::with('evaluations')
+            ->get()
+            ->filter(fn ($project) => $project->evaluations->isNotEmpty())
+            ->sortByDesc(fn ($project) => $project->average_viability_score);
+
+        return view('projects.prioritization', compact('projects'));
+    }
 }

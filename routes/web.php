@@ -41,6 +41,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware(['role:admin|junta'])->group(function () {
+        Route::get('prioritization', [ProjectController::class, 'prioritization'])->name('projects.prioritization');
         Route::get('projects/{project}/evaluate', [ProjectEvaluationController::class, 'create'])->name('evaluations.create');
         Route::post('projects/{project}/evaluate', [ProjectEvaluationController::class, 'store'])->name('evaluations.store');
         Route::get('projects/{project}/evaluations/{evaluation}/edit', [ProjectEvaluationController::class, 'edit'])->name('evaluations.edit');
