@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\ViabilityModelConfiguration;
 
 class Project extends Model
 {
@@ -52,9 +53,11 @@ class Project extends Model
             return null;
         }
 
+        $config = ViabilityModelConfiguration::getActive();
+
         return match (true) {
-            $score >= 7.0 => 'viable',
-            $score >= 4.0 => 'conditional',
+            $score >= $config->viable_threshold => 'viable',
+            $score >= $config->conditional_threshold => 'conditional',
             default => 'not_viable',
         };
     }
