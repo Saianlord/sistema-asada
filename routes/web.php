@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectSupportController;
 use App\Http\Controllers\ProjectEvaluationController;
+use App\Http\Controllers\ViabilityModelConfigurationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -46,6 +47,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('projects/{project}/evaluate', [ProjectEvaluationController::class, 'store'])->name('evaluations.store');
         Route::get('projects/{project}/evaluations/{evaluation}/edit', [ProjectEvaluationController::class, 'edit'])->name('evaluations.edit');
         Route::put('projects/{project}/evaluations/{evaluation}', [ProjectEvaluationController::class, 'update'])->name('evaluations.update');
+        Route::get('viability-config', [ViabilityModelConfigurationController::class, 'edit'])->name('viability-config.edit');
+        Route::put('viability-config', [ViabilityModelConfigurationController::class, 'update'])->name('viability-config.update');
     });
 
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
