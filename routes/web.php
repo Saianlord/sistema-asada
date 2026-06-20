@@ -49,6 +49,8 @@ Route::middleware(['auth'])->group(function () {
         Route::put('projects/{project}/evaluations/{evaluation}', [ProjectEvaluationController::class, 'update'])->name('evaluations.update');
         Route::get('viability-config', [ViabilityModelConfigurationController::class, 'edit'])->name('viability-config.edit');
         Route::put('viability-config', [ViabilityModelConfigurationController::class, 'update'])->name('viability-config.update');
+        Route::patch('projects/{project}/approve', [ProjectController::class, 'approve'])->name('projects.approve');
+        Route::patch('projects/{project}/reject', [ProjectController::class, 'reject'])->name('projects.reject');
     });
 
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
