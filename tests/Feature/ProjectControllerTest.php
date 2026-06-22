@@ -378,6 +378,7 @@ class ProjectControllerTest extends TestCase
         $junta->assignRole('junta');
 
         $admin = User::first();
+        // HU-13: project must have a valid estimated_cost to be approvable
         $project = Project::create([
             'title' => 'Pending Project To Approve',
             'description' => 'Desc',
@@ -385,6 +386,7 @@ class ProjectControllerTest extends TestCase
             'priority' => 'low',
             'user_id' => $admin->id,
             'status' => 'pending',
+            'estimated_cost' => 50000,
         ]);
 
         $response = $this->actingAs($junta)->patch(route('projects.approve', $project));
@@ -394,6 +396,32 @@ class ProjectControllerTest extends TestCase
 
         $project->refresh();
         $this->assertEquals('approved', $project->status);
+    }
+
+    public function test_cannot_approve_project_without_budget(): void
+    {
+        $junta = User::factory()->create();
+        $junta->assignRole('junta');
+
+        $admin = User::first();
+        // HU-13 Escenario 3: project with no budget must be blocked from approval
+        $project = Project::create([
+            'title' => 'Project Without Budget',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+            'estimated_cost' => null,
+        ]);
+
+        $response = $this->actingAs($junta)->patch(route('projects.approve', $project));
+
+        $response->assertRedirect(route('projects.show', $project));
+        $response->assertSessionHas('error', 'No se puede aprobar el proyecto porque no tiene presupuesto disponible.');
+
+        $project->refresh();
+        $this->assertEquals('pending', $project->status);
     }
 
     public function test_authorized_user_can_reject_pending_project(): void
