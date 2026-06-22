@@ -48,6 +48,11 @@ Route::middleware(['auth'])->group(function () {
         Route::put('projects/{project}/evaluations/{evaluation}', [ProjectEvaluationController::class, 'update'])->name('evaluations.update');
     });
 
+    Route::middleware(['role:admin|administration'])->group(function () {
+        Route::get('projects/{project}/approval', [ProjectController::class, 'approvalForm'])->name('projects.approval.create');
+        Route::post('projects/{project}/approval', [ProjectController::class, 'storeApproval'])->name('projects.approval.store');
+    });
+
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
 });

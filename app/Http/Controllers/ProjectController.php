@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\StoreProjectApprovalRequest;
 use App\Models\Project;
 use App\Http\Requests\UpdateProjectRequest;
 use Illuminate\Http\RedirectResponse;
@@ -60,8 +61,8 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
-        if (in_array($project->status, ['approved', 'closed'])) {
-            return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+        if (in_array($project->status, ['approved', 'rejected', 'closed'])) {
+            return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado, rechazado o cerrado.');
         }
 
         return view('projects.edit', compact('project'));
@@ -69,8 +70,8 @@ class ProjectController extends Controller
 
     public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
     {
-        if (in_array($project->status, ['approved', 'closed'])) {
-            return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+        if (in_array($project->status, ['approved', 'rejected', 'closed'])) {
+            return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado, rechazado o cerrado.');
         }
 
         $project->update([
@@ -91,5 +92,56 @@ class ProjectController extends Controller
             ->sortByDesc(fn ($project) => $project->average_viability_score);
 
         return view('projects.prioritization', compact('projects'));
+    }
+
+    public function approve(Project $project): RedirectResponse
+    {
+        if ($project->status !== 'pending') {
+            return redirect()->route('projects.show', $project)->with('error', 'Solo los proyectos en estado pendiente pueden ser aprobados o rechazados.');
+        }
+
+        if (is_null($project->estimated_cost) || $project->estimated_cost <= 0) {
+            return redirect()->route('projects.show', $project)->with('error', 'No se puede aprobar el proyecto porque no tiene presupuesto disponible.');
+        }
+
+        $project->update(['status' => 'approved']);
+
+        return redirect()->route('projects.show', $project)->with('success', 'Proyecto aprobado exitosamente.');
+    }
+
+    public function reject(Project $project): RedirectResponse
+    {
+        if ($project->status !== 'pending') {
+            return redirect()->route('projects.show', $project)->with('error', 'Solo los proyectos en estado pendiente pueden ser aprobados o rechazados.');
+        }
+
+        $project->update(['status' => 'rejected']);
+
+        return redirect()->route('projects.show', $project)->with('success', 'Proyecto rechazado exitosamente.');
+    }
+
+    public function approvalForm(Project $project): View
+    {
+        if ($project->status !== 'approved') {
+            return redirect()->route('projects.show', $project)->with('error', 'Solo se puede registrar el acuerdo en proyectos aprobados.');
+        }
+
+        return view('projects.approval', compact('project'));
+    }
+
+    public function storeApproval(StoreProjectApprovalRequest $request, Project $project): RedirectResponse
+    {
+        if ($project->status !== 'approved') {
+            return redirect()->route('projects.show', $project)->with('error', 'Solo se puede registrar el acuerdo en proyectos aprobados.');
+        }
+
+        $project->update([
+            'approval_agreement' => $request->approval_agreement,
+            'approval_date' => $request->approval_date,
+            'approval_responsible' => $request->approval_responsible,
+            'approval_justification' => $request->approval_justification,
+        ]);
+
+        return redirect()->route('projects.show', $project)->with('success', 'Registro de aprobación guardado correctamente.');
     }
 }

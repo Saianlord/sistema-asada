@@ -23,6 +23,10 @@ class Project extends Model
         'impact',
         'risk',
         'evidence_path',
+        'approval_agreement',
+        'approval_date',
+        'approval_responsible',
+        'approval_justification',
     ];
 
     public function user(): BelongsTo
