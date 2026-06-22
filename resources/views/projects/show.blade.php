@@ -130,6 +130,22 @@
                     </div>
                 </div>
 
+                @if ($project->approval_agreement)
+                    <div class="mt-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
+                        <h4 class="text-sm font-semibold text-slate-900">Registro de Aprobación</h4>
+                        <p class="text-sm text-slate-600 mt-2">Acuerdo: <span class="font-medium text-slate-800">{{ $project->approval_agreement }}</span></p>
+                        <p class="text-sm text-slate-600">Fecha: <span class="font-medium text-slate-800">{{ optional($project->approval_date)->format('d/m/Y') }}</span></p>
+                        <p class="text-sm text-slate-600">Responsable: <span class="font-medium text-slate-800">{{ $project->approval_responsible }}</span></p>
+                        <div class="mt-2 text-sm text-slate-700 bg-slate-50 p-3 rounded-md border border-slate-100">{{ $project->approval_justification }}</div>
+                    </div>
+                @elseif ($project->status === 'approved')
+                    @hasanyrole('admin|administration')
+                        <div class="mt-4">
+                            <a href="{{ route('projects.approval.create', $project) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">Registrar Acuerdo</a>
+                        </div>
+                    @endhasanyrole
+                @endif
+
                 <div class="mt-8 space-y-6">
                     <div>
                         <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Descripción</h3>
