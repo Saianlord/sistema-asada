@@ -29,14 +29,36 @@
                     @else
                         <a href="{{ route('evaluations.create', $project) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                             <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
                             Evaluar Proyecto
                         </a>
                     @endif
+                    @if ($project->status === 'pending')
+                        <form method="POST" action="{{ route('projects.approve', $project) }}" class="inline">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors" onclick="return confirm('¿Estás seguro de que deseas aprobar este proyecto?');">
+                                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Aprobar Proyecto
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('projects.reject', $project) }}" class="inline">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors" onclick="return confirm('¿Estás seguro de que deseas rechazar este proyecto?');">
+                                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Rechazar Proyecto
+                            </button>
+                        </form>
+                    @endif
                     @endhasanyrole
                     @hasanyrole('admin|administration')
-                    @if (!in_array($project->status, ['approved', 'closed']))
+                    @if (!in_array($project->status, ['approved', 'rejected', 'closed']))
                         <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                             <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -66,6 +88,14 @@
                 </div>
             @endif
 
+            @hasrole('junta')
+                @if (is_null($project->estimated_cost) || $project->estimated_cost <= 0)
+                    <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm font-medium">
+                        No se encontró presupuesto asignado para esta iniciativa. No será posible aprobarla hasta que se asigne presupuesto.
+                    </div>
+                @endif
+            @endhasrole
+
             <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-8">
                 <div class="flex justify-between items-start border-b border-slate-100 pb-6">
                     <div>
@@ -83,6 +113,10 @@
                         @elseif ($project->status === 'approved')
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
                                 Aprobado
+                            </span>
+                        @elseif ($project->status === 'rejected')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
+                                Rechazado
                             </span>
                         @elseif ($project->status === 'closed')
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-800">
