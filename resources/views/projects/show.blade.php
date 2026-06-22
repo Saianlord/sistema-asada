@@ -88,6 +88,14 @@
                 </div>
             @endif
 
+            @hasrole('junta')
+                @if (is_null($project->estimated_cost) || $project->estimated_cost <= 0)
+                    <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm font-medium">
+                        No se encontró presupuesto asignado para esta iniciativa. No será posible aprobarla hasta que se asigne presupuesto.
+                    </div>
+                @endif
+            @endhasrole
+
             <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-8">
                 <div class="flex justify-between items-start border-b border-slate-100 pb-6">
                     <div>

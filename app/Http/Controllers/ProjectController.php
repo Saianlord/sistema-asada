@@ -69,6 +69,7 @@ class ProjectController extends Controller
 
     public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
     {
+
         if (in_array($project->status, ['approved', 'rejected', 'closed'])) {
             return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado, rechazado o cerrado.');
         }
@@ -97,6 +98,10 @@ class ProjectController extends Controller
     {
         if ($project->status !== 'pending') {
             return redirect()->route('projects.show', $project)->with('error', 'Solo los proyectos en estado pendiente pueden ser aprobados o rechazados.');
+        }
+
+        if (is_null($project->estimated_cost) || $project->estimated_cost <= 0) {
+            return redirect()->route('projects.show', $project)->with('error', 'No se puede aprobar el proyecto porque no tiene presupuesto disponible.');
         }
 
         $project->update(['status' => 'approved']);
