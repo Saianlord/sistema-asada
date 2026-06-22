@@ -120,7 +120,7 @@ class ProjectController extends Controller
         return redirect()->route('projects.show', $project)->with('success', 'Proyecto rechazado exitosamente.');
     }
 
-    public function approvalForm(Project $project): View
+    public function approvalForm(Project $project): View|RedirectResponse
     {
         if ($project->status !== 'approved') {
             return redirect()->route('projects.show', $project)->with('error', 'Solo se puede registrar el acuerdo en proyectos aprobados.');
