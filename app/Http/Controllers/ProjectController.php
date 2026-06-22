@@ -60,8 +60,8 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
-        if (in_array($project->status, ['approved', 'closed'])) {
-            return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+        if (in_array($project->status, ['approved', 'rejected', 'closed'])) {
+            return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado, rechazado o cerrado.');
         }
 
         return view('projects.edit', compact('project'));
@@ -69,8 +69,9 @@ class ProjectController extends Controller
 
     public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
     {
-        if (in_array($project->status, ['approved', 'closed'])) {
-            return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+
+        if (in_array($project->status, ['approved', 'rejected', 'closed'])) {
+            return redirect()->route('projects.show', $project)->with('error', 'No se puede editar un proyecto que ya ha sido aprobado, rechazado o cerrado.');
         }
 
         $project->update([
@@ -92,8 +93,6 @@ class ProjectController extends Controller
 
         return view('projects.prioritization', compact('projects'));
     }
-<<<<<<< Updated upstream
-=======
 
     public function approve(Project $project): RedirectResponse
     {
@@ -120,5 +119,4 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.show', $project)->with('success', 'Proyecto rechazado exitosamente.');
     }
->>>>>>> Stashed changes
 }
