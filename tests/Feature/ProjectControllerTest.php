@@ -16,6 +16,7 @@ class ProjectControllerTest extends TestCase
     {
         parent::setUp();
         $this->seed(RolesAndAdminSeeder::class);
+        $this->withoutVite();
     }
 
     public function test_authorized_user_can_access_create_project_page(): void
@@ -282,11 +283,11 @@ class ProjectControllerTest extends TestCase
 
         $response = $this->actingAs($admin)->get(route('projects.edit', $projectApproved));
         $response->assertRedirect(route('projects.show', $projectApproved));
-        $response->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+        $response->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado, rechazado o cerrado.');
 
         $response = $this->actingAs($admin)->get(route('projects.edit', $projectClosed));
         $response->assertRedirect(route('projects.show', $projectClosed));
-        $response->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+        $response->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado, rechazado o cerrado.');
     }
 
     public function test_authorized_user_can_update_project(): void
@@ -365,9 +366,159 @@ class ProjectControllerTest extends TestCase
         ]);
 
         $response->assertRedirect(route('projects.show', $projectApproved));
-        $response->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado o cerrado.');
+        $response->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado, rechazado o cerrado.');
 
         $projectApproved->refresh();
         $this->assertEquals('Approved Title', $projectApproved->title);
+    }
+
+    public function test_authorized_user_can_approve_pending_project(): void
+    {
+        $junta = User::factory()->create();
+        $junta->assignRole('junta');
+
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Pending Project To Approve',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($junta)->patch(route('projects.approve', $project));
+
+        $response->assertRedirect(route('projects.show', $project));
+        $response->assertSessionHas('success', 'Proyecto aprobado exitosamente.');
+
+        $project->refresh();
+        $this->assertEquals('approved', $project->status);
+    }
+
+    public function test_authorized_user_can_reject_pending_project(): void
+    {
+        $junta = User::factory()->create();
+        $junta->assignRole('junta');
+
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Pending Project To Reject',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($junta)->patch(route('projects.reject', $project));
+
+        $response->assertRedirect(route('projects.show', $project));
+        $response->assertSessionHas('success', 'Proyecto rechazado exitosamente.');
+
+        $project->refresh();
+        $this->assertEquals('rejected', $project->status);
+    }
+
+    public function test_unauthorized_user_cannot_approve_or_reject_project(): void
+    {
+        $operator = User::factory()->create();
+        $operator->assignRole('operations');
+
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Pending Project Security Check',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $responseApprove = $this->actingAs($operator)->patch(route('projects.approve', $project));
+        $responseApprove->assertStatus(403);
+
+        $responseReject = $this->actingAs($operator)->patch(route('projects.reject', $project));
+        $responseReject->assertStatus(403);
+
+        $project->refresh();
+        $this->assertEquals('pending', $project->status);
+    }
+
+    public function test_cannot_approve_or_reject_non_pending_project(): void
+    {
+        $admin = User::first();
+        $projectApproved = Project::create([
+            'title' => 'Approved Project',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+        ]);
+
+        $responseApprove = $this->actingAs($admin)->patch(route('projects.approve', $projectApproved));
+        $responseApprove->assertRedirect(route('projects.show', $projectApproved));
+        $responseApprove->assertSessionHas('error', 'Solo los proyectos en estado pendiente pueden ser aprobados o rechazados.');
+
+        $responseReject = $this->actingAs($admin)->patch(route('projects.reject', $projectApproved));
+        $responseReject->assertRedirect(route('projects.show', $projectApproved));
+        $responseReject->assertSessionHas('error', 'Solo los proyectos en estado pendiente pueden ser aprobados o rechazados.');
+    }
+
+    public function test_rejected_project_cannot_be_edited_or_updated(): void
+    {
+        $admin = User::first();
+        $projectRejected = Project::create([
+            'title' => 'Rejected Project',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'rejected',
+        ]);
+
+        $responseEdit = $this->actingAs($admin)->get(route('projects.edit', $projectRejected));
+        $responseEdit->assertRedirect(route('projects.show', $projectRejected));
+        $responseEdit->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado, rechazado o cerrado.');
+
+        $responseUpdate = $this->actingAs($admin)->put(route('projects.update', $projectRejected), [
+            'title' => 'Updated Title',
+            'description' => 'Desc',
+            'criticality' => 'high',
+            'priority' => 'high',
+        ]);
+        $responseUpdate->assertRedirect(route('projects.show', $projectRejected));
+        $responseUpdate->assertSessionHas('error', 'No se puede editar un proyecto que ya ha sido aprobado, rechazado o cerrado.');
+
+        $projectRejected->refresh();
+        $this->assertEquals('Rejected Project', $projectRejected->title);
+    }
+
+    public function test_filtering_by_rejected_status(): void
+    {
+        $admin = User::first();
+        $projectRejected = Project::create([
+            'title' => 'Project Rejected Filter',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'rejected',
+        ]);
+        $projectPending = Project::create([
+            'title' => 'Project Pending Filter',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.index', ['status' => 'rejected']));
+
+        $response->assertStatus(200);
+        $response->assertSee('Project Rejected Filter');
+        $response->assertDontSee('Project Pending Filter');
     }
 }
