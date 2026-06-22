@@ -549,4 +549,257 @@ class ProjectControllerTest extends TestCase
         $response->assertSee('Project Rejected Filter');
         $response->assertDontSee('Project Pending Filter');
     }
+
+    // =========================================================================
+    // HU-13: Alerta de presupuesto para proyectos
+    // =========================================================================
+
+    public function test_cannot_approve_project_with_zero_budget(): void
+    {
+        // HU-13 Escenario 3: estimated_cost = 0 also has no available budget
+        $junta = User::factory()->create();
+        $junta->assignRole('junta');
+
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Project With Zero Budget',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+            'estimated_cost' => 0,
+        ]);
+
+        $response = $this->actingAs($junta)->patch(route('projects.approve', $project));
+
+        $response->assertRedirect(route('projects.show', $project));
+        $response->assertSessionHas('error', 'No se puede aprobar el proyecto porque no tiene presupuesto disponible.');
+
+        $project->refresh();
+        $this->assertEquals('pending', $project->status);
+    }
+
+    public function test_can_approve_project_with_valid_budget(): void
+    {
+        // HU-13 Escenario 2: project with assigned budget proceeds without alert
+        $junta = User::factory()->create();
+        $junta->assignRole('junta');
+
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Project With Valid Budget',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+            'estimated_cost' => 100000,
+        ]);
+
+        $response = $this->actingAs($junta)->patch(route('projects.approve', $project));
+
+        $response->assertRedirect(route('projects.show', $project));
+        $response->assertSessionHas('success', 'Proyecto aprobado exitosamente.');
+
+        $project->refresh();
+        $this->assertEquals('approved', $project->status);
+    }
+
+    // =========================================================================
+    // HU-14: Trazabilidad (Acuerdo, fecha, responsable, justificación)
+    // =========================================================================
+
+    public function test_authorized_user_can_access_approval_form_for_approved_project(): void
+    {
+        // HU-14: only approved projects can have traceability data recorded
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Approved Project For Traceability',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.approval.create', $project));
+        $response->assertStatus(200);
+        $response->assertSee('Acuerdo');
+        $response->assertSee('Responsable');
+    }
+
+    public function test_approval_form_redirects_for_non_approved_project(): void
+    {
+        // HU-14: cannot register traceability on a pending project
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Pending Project For Traceability Block',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.approval.create', $project));
+        $response->assertRedirect(route('projects.show', $project));
+        $response->assertSessionHas('error', 'Solo se puede registrar el acuerdo en proyectos aprobados.');
+    }
+
+    public function test_authorized_user_can_store_approval_traceability(): void
+    {
+        // HU-14 Escenario 1: successfully save all traceability fields
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Approved Project Traceability Save',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('projects.approval.store', $project), [
+            'approval_agreement' => 'Acuerdo-2026-001',
+            'approval_date' => '2026-06-22',
+            'approval_responsible' => 'Juan Pérez',
+            'approval_justification' => 'El proyecto cumple todos los criterios de viabilidad técnica y financiera.',
+        ]);
+
+        $response->assertRedirect(route('projects.show', $project));
+        $response->assertSessionHas('success', 'Registro de aprobación guardado correctamente.');
+
+        $this->assertDatabaseHas('projects', [
+            'id' => $project->id,
+            'approval_agreement' => 'Acuerdo-2026-001',
+            'approval_responsible' => 'Juan Pérez',
+        ]);
+    }
+
+    public function test_store_approval_validation_errors_for_missing_fields(): void
+    {
+        // HU-14 Escenario 2: all fields are required
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Approved Project Validation Test',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('projects.approval.store', $project), []);
+
+        $response->assertSessionHasErrors([
+            'approval_agreement',
+            'approval_date',
+            'approval_responsible',
+            'approval_justification',
+        ]);
+    }
+
+    public function test_store_approval_validation_errors_for_invalid_date(): void
+    {
+        // HU-14 Escenario 3: invalid data must be rejected
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Approved Project Invalid Date Test',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('projects.approval.store', $project), [
+            'approval_agreement' => 'Acuerdo-001',
+            'approval_date' => 'not-a-date',
+            'approval_responsible' => 'Juan Pérez',
+            'approval_justification' => 'Justificación válida.',
+        ]);
+
+        $response->assertSessionHasErrors(['approval_date']);
+    }
+
+    public function test_store_approval_blocked_for_non_approved_project(): void
+    {
+        // HU-14: cannot POST traceability on a project that is not approved
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Pending Project Traceability Block POST',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('projects.approval.store', $project), [
+            'approval_agreement' => 'Acuerdo-001',
+            'approval_date' => '2026-06-22',
+            'approval_responsible' => 'Juan Pérez',
+            'approval_justification' => 'Justificación.',
+        ]);
+
+        $response->assertRedirect(route('projects.show', $project));
+        $response->assertSessionHas('error', 'Solo se puede registrar el acuerdo en proyectos aprobados.');
+
+        $project->refresh();
+        $this->assertNull($project->approval_agreement);
+    }
+
+    public function test_traceability_data_is_visible_on_project_show(): void
+    {
+        // HU-14 Escenario 4: stored traceability data is displayed on project detail
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Project With Full Traceability',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+            'approval_agreement' => 'Acuerdo-2026-Final',
+            'approval_date' => '2026-06-22',
+            'approval_responsible' => 'María López',
+            'approval_justification' => 'Proyecto aprobado por la Junta en sesión ordinaria.',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.show', $project));
+
+        $response->assertStatus(200);
+        $response->assertSee('Acuerdo-2026-Final');
+        $response->assertSee('María López');
+        $response->assertSee('Proyecto aprobado por la Junta en sesión ordinaria.');
+    }
+
+    public function test_unauthorized_user_cannot_access_approval_form_or_store(): void
+    {
+        // HU-14: only admin/administration role can manage traceability
+        $operator = User::factory()->create();
+        $operator->assignRole('operations');
+
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Project For Traceability Auth Check',
+            'description' => 'Desc',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'status' => 'approved',
+        ]);
+
+        $responseGet = $this->actingAs($operator)->get(route('projects.approval.create', $project));
+        $responseGet->assertStatus(403);
+
+        $responsePost = $this->actingAs($operator)->post(route('projects.approval.store', $project), [
+            'approval_agreement' => 'Acuerdo-001',
+            'approval_date' => '2026-06-22',
+            'approval_responsible' => 'Juan',
+            'approval_justification' => 'Justificación.',
+        ]);
+        $responsePost->assertStatus(403);
+    }
 }
