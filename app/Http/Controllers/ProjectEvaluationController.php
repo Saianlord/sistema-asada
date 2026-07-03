@@ -12,6 +12,11 @@ class ProjectEvaluationController extends Controller
 {
     public function create(Project $project): View|RedirectResponse
     {
+        if ($project->status !== 'pending') {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
+        }
+
         $existingEvaluation = ProjectEvaluation::where('project_id', $project->id)
             ->where('user_id', auth()->id())
             ->first();
@@ -26,6 +31,11 @@ class ProjectEvaluationController extends Controller
 
     public function store(StoreProjectEvaluationRequest $request, Project $project): RedirectResponse
     {
+        if ($project->status !== 'pending') {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
+        }
+
         $existingEvaluation = ProjectEvaluation::where('project_id', $project->id)
             ->where('user_id', auth()->id())
             ->first();
@@ -50,6 +60,11 @@ class ProjectEvaluationController extends Controller
 
     public function edit(Project $project, ProjectEvaluation $evaluation): View|RedirectResponse
     {
+        if ($project->status !== 'pending') {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
+        }
+
         if ($evaluation->user_id !== auth()->id()) {
             abort(403);
         }
@@ -59,6 +74,11 @@ class ProjectEvaluationController extends Controller
 
     public function update(StoreProjectEvaluationRequest $request, Project $project, ProjectEvaluation $evaluation): RedirectResponse
     {
+        if ($project->status !== 'pending') {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
+        }
+
         if ($evaluation->user_id !== auth()->id()) {
             abort(403);
         }
