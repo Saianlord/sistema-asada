@@ -144,4 +144,29 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.show', $project)->with('success', 'Registro de aprobación guardado correctamente.');
     }
+
+    public function updateStatus(Request $request, Project $project): RedirectResponse
+    {
+        if (!auth()->user()->hasAnyRole(['admin', 'administration']) && auth()->id() !== $project->user_id) {
+            abort(403);
+        }
+
+        if ($project->status === 'closed') {
+            return redirect()->route('projects.show', $project)->with('error', 'No se puede cambiar el estado de un proyecto finalizado.');
+        }
+
+        $request->validate([
+            'status' => 'required|string|in:pending,en_analisis,prioritized,approved,in_progress,paused,closed',
+        ]);
+
+        if ($request->status === 'approved') {
+            if (is_null($project->estimated_cost) || $project->estimated_cost <= 0) {
+                return redirect()->route('projects.show', $project)->with('error', 'No se puede aprobar el proyecto porque no tiene presupuesto disponible.');
+            }
+        }
+
+        $project->update(['status' => $request->status]);
+
+        return redirect()->route('projects.show', $project)->with('success', 'Estado del proyecto actualizado exitosamente.');
+    }
 }

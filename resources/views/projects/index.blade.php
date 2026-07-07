@@ -36,10 +36,14 @@
                         <x-input-label for="status" value="Estado" />
                         <select id="status" name="status" class="block mt-1 w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-slate-700 text-sm">
                             <option value="">Todos</option>
-                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pendiente</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Registrado</option>
+                            <option value="en_analisis" {{ request('status') === 'en_analisis' ? 'selected' : '' }}>En análisis</option>
+                            <option value="prioritized" {{ request('status') === 'prioritized' ? 'selected' : '' }}>Priorizado</option>
                             <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Aprobado</option>
+                            <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>En ejecución</option>
+                            <option value="paused" {{ request('status') === 'paused' ? 'selected' : '' }}>Pausado</option>
+                            <option value="closed" {{ request('status') === 'closed' ? 'selected' : '' }}>Finalizado</option>
                             <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rechazado</option>
-                            <option value="closed" {{ request('status') === 'closed' ? 'selected' : '' }}>Cerrado</option>
                         </select>
                     </div>
 
@@ -114,15 +118,23 @@
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm">
                                         @if ($project->status === 'pending')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pendiente</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Registrado</span>
+                                        @elseif ($project->status === 'en_analisis')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">En análisis</span>
+                                        @elseif ($project->status === 'prioritized')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Priorizado</span>
                                         @elseif ($project->status === 'approved')
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Aprobado</span>
+                                        @elseif ($project->status === 'in_progress')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">En ejecución</span>
+                                        @elseif ($project->status === 'paused')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Pausado</span>
+                                        @elseif ($project->status === 'closed')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">Finalizado</span>
                                         @elseif ($project->status === 'rejected')
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Rechazado</span>
-                                        @elseif ($project->status === 'closed')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">Cerrado</span>
                                         @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">{{ $project->status }}</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">{{ $project->status_label }}</span>
                                         @endif
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-right font-medium pr-8">

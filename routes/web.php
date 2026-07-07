@@ -60,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+    Route::patch('projects/{project}/status', [ProjectController::class, 'updateStatus'])->name('projects.status.update');
 });
 
 require __DIR__.'/auth.php';
