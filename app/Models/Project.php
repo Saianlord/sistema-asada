@@ -65,4 +65,20 @@ class Project extends Model
             default => 'not_viable',
         };
     }
+
+    public function getStatusLabelAttribute(): string
+    {
+        $labels = [
+            'pending' => 'Registrado',
+            'en_analisis' => 'En análisis',
+            'prioritized' => 'Priorizado',
+            'approved' => 'Aprobado',
+            'in_progress' => 'En ejecución',
+            'paused' => 'Pausado',
+            'closed' => 'Finalizado',
+            'rejected' => 'Rechazado',
+        ];
+
+        return $labels[$this->status] ?? $this->status;
+    }
 }

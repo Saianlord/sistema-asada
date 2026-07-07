@@ -110,27 +110,69 @@
                     <div>
                         @if ($project->status === 'pending')
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                                Pendiente
+                                Registrado
+                            </span>
+                        @elseif ($project->status === 'en_analisis')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-indigo-100 text-indigo-800">
+                                En análisis
+                            </span>
+                        @elseif ($project->status === 'prioritized')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 text-purple-800">
+                                Priorizado
                             </span>
                         @elseif ($project->status === 'approved')
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
                                 Aprobado
                             </span>
+                        @elseif ($project->status === 'in_progress')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                                En ejecución
+                            </span>
+                        @elseif ($project->status === 'paused')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 text-amber-800">
+                                Pausado
+                            </span>
+                        @elseif ($project->status === 'closed')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-800">
+                                Finalizado
+                            </span>
                         @elseif ($project->status === 'rejected')
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
                                 Rechazado
                             </span>
-                        @elseif ($project->status === 'closed')
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-800">
-                                Cerrado
-                            </span>
                         @else
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
-                                {{ $project->status }}
+                                {{ $project->status_label }}
                             </span>
                         @endif
                     </div>
                 </div>
+
+                @if ($project->status !== 'closed' && (auth()->user()->hasAnyRole(['admin', 'administration']) || auth()->id() === $project->user_id))
+                    <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg shadow-sm">
+                        <form method="POST" action="{{ route('projects.status.update', $project) }}" class="flex flex-col sm:flex-row sm:items-center gap-3">
+                            @csrf
+                            @method('PATCH')
+                            <div class="flex-1">
+                                <label for="status" class="block text-sm font-semibold text-slate-700 mb-1">Cambiar Estado del Proyecto</label>
+                                <select id="status" name="status" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-slate-700 text-sm">
+                                    <option value="pending" {{ $project->status === 'pending' ? 'selected' : '' }}>Registrado</option>
+                                    <option value="en_analisis" {{ $project->status === 'en_analisis' ? 'selected' : '' }}>En análisis</option>
+                                    <option value="prioritized" {{ $project->status === 'prioritized' ? 'selected' : '' }}>Priorizado</option>
+                                    <option value="approved" {{ $project->status === 'approved' ? 'selected' : '' }}>Aprobado</option>
+                                    <option value="in_progress" {{ $project->status === 'in_progress' ? 'selected' : '' }}>En ejecución</option>
+                                    <option value="paused" {{ $project->status === 'paused' ? 'selected' : '' }}>Pausado</option>
+                                    <option value="closed" {{ $project->status === 'closed' ? 'selected' : '' }}>Finalizado</option>
+                                </select>
+                            </div>
+                            <div class="sm:self-end">
+                                <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                                    Actualizar Estado
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                @endif
 
                 @if ($project->approval_agreement)
                     <div class="mt-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
