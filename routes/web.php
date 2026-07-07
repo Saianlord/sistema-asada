@@ -7,6 +7,7 @@ use App\Http\Controllers\ProjectSupportController;
 use App\Http\Controllers\ProjectEvaluationController;
 use App\Http\Controllers\ViabilityModelConfigurationController;
 use App\Http\Controllers\ProjectTaskController;
+use App\Http\Controllers\ProjectTrackingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -68,6 +69,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('projects/{project}/tasks/{task}/edit', [ProjectTaskController::class, 'edit'])->name('projects.tasks.edit');
     Route::put('projects/{project}/tasks/{task}', [ProjectTaskController::class, 'update'])->name('projects.tasks.update');
     Route::patch('projects/{project}/tasks/{task}/status', [ProjectTaskController::class, 'updateStatus'])->name('projects.tasks.status.update');
+
+    Route::get('projects/{project}/tracking/create', [ProjectTrackingController::class, 'create'])->name('projects.tracking.create');
+    Route::post('projects/{project}/tracking', [ProjectTrackingController::class, 'store'])->name('projects.tracking.store');
+    Route::get('projects/{project}/tracking/{tracking}/edit', [ProjectTrackingController::class, 'edit'])->name('projects.tracking.edit');
+    Route::put('projects/{project}/tracking/{tracking}', [ProjectTrackingController::class, 'update'])->name('projects.tracking.update');
 });
 
 require __DIR__.'/auth.php';

@@ -54,9 +54,14 @@ class ProjectController extends Controller
 
     public function show(Project $project): View
     {
-        $project->load(['evaluations.user']);
+    $project->load([
+        'evaluations.user',
+        'trackings' => function ($query) {
+            $query->orderBy('date', 'desc')->orderBy('id', 'desc');
+        },
+    ]);
 
-        return view('projects.show', compact('project'));
+    return view('projects.show', compact('project'));
     }
 
     public function edit(Project $project)
