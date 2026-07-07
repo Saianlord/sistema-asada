@@ -6,6 +6,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectSupportController;
 use App\Http\Controllers\ProjectEvaluationController;
 use App\Http\Controllers\ViabilityModelConfigurationController;
+use App\Http\Controllers\ProjectTaskController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -61,6 +62,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::patch('projects/{project}/status', [ProjectController::class, 'updateStatus'])->name('projects.status.update');
+
+    Route::get('projects/{project}/kanban', [ProjectTaskController::class, 'index'])->name('projects.kanban.index');
+    Route::post('projects/{project}/tasks', [ProjectTaskController::class, 'store'])->name('projects.tasks.store');
+    Route::get('projects/{project}/tasks/{task}/edit', [ProjectTaskController::class, 'edit'])->name('projects.tasks.edit');
+    Route::put('projects/{project}/tasks/{task}', [ProjectTaskController::class, 'update'])->name('projects.tasks.update');
+    Route::patch('projects/{project}/tasks/{task}/status', [ProjectTaskController::class, 'updateStatus'])->name('projects.tasks.status.update');
 });
 
 require __DIR__.'/auth.php';
