@@ -374,6 +374,52 @@
                     </div>
                 </div>
             </div>
+
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-8 mt-6">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                    <h3 class="text-lg font-bold text-slate-900">Seguimiento del Proyecto</h3>
+                    @if ($project->status === 'in_progress' && (auth()->user()->hasAnyRole(['admin', 'administration']) || auth()->id() === $project->user_id))
+                        <a href="{{ route('projects.tracking.create', $project) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                            Registrar Seguimiento
+                        </a>
+                    @endif
+                </div>
+
+                @if ($project->trackings->count() > 0)
+                    <div class="space-y-6">
+                        @foreach ($project->trackings as $tracking)
+                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center gap-3">
+                                        @php
+                                            $badgeClasses = [
+                                                'milestone' => 'bg-purple-100 text-purple-800',
+                                                'progress' => 'bg-green-100 text-green-800',
+                                                'incident' => 'bg-red-100 text-red-800',
+                                            ][$tracking->type] ?? 'bg-slate-100 text-slate-800';
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $badgeClasses }}">
+                                            {{ $tracking->type_label }}
+                                        </span>
+                                        <h4 class="text-sm font-bold text-slate-900">{{ $tracking->title }}</h4>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <span class="text-xs text-slate-500 font-medium">{{ \Carbon\Carbon::parse($tracking->date)->format('d/m/Y') }}</span>
+                                        @if ($project->status === 'in_progress' && (auth()->user()->hasAnyRole(['admin', 'administration']) || auth()->id() === $project->user_id))
+                                            <a href="{{ route('projects.tracking.edit', [$project, $tracking]) }}" class="text-xs font-semibold text-blue-600 hover:text-blue-900 transition-colors">
+                                                Editar
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+                                <p class="text-sm text-slate-700 whitespace-pre-wrap">{{ $tracking->description }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm text-slate-500 text-center py-6">No hay registros de seguimiento para este proyecto.</p>
+                @endif
+            </div>
         </div>
     </div>
 </x-app-layout>
