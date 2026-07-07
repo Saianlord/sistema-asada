@@ -50,6 +50,11 @@ class Project extends Model
         return $this->hasMany(ProjectTracking::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ProjectDocument::class);
+    }
+
     public function getAverageViabilityScoreAttribute(): ?float
     {
         if ($this->evaluations->isEmpty()) {

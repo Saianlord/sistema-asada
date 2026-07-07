@@ -420,6 +420,71 @@
                     <p class="text-sm text-slate-500 text-center py-6">No hay registros de seguimiento para este proyecto.</p>
                 @endif
             </div>
+
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-8 mt-6">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <h3 class="text-lg font-bold text-slate-900">Documentos del Proyecto</h3>
+                </div>
+
+                @if ($project->status === 'in_progress' && (auth()->user()->hasAnyRole(['admin', 'administration']) || auth()->id() === $project->user_id))
+                    <form method="POST" action="{{ route('projects.documents.store', $project) }}" enctype="multipart/form-data" class="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                        @csrf
+                        <div class="flex flex-col sm:flex-row items-end gap-4">
+                            <div class="flex-1 w-full">
+                                <label for="document" class="block text-sm font-medium text-slate-700 mb-1">Adjuntar archivo (PDF, JPG, JPEG, PNG, DOC, DOCX, XLS, XLSX - Máx. 10MB)</label>
+                                <input type="file" name="document" id="document" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                            </div>
+                            <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                                Adjuntar Documento
+                            </button>
+                        </div>
+                        @error('document')
+                            <p class="text-xs text-red-600 mt-2">{{ $message }}</p>
+                        @enderror
+                    </form>
+                @endif
+
+                @if ($project->documents->count() > 0)
+                    <div class="space-y-4">
+                        @foreach ($project->documents as $document)
+                            <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <div class="p-2 bg-blue-100 text-blue-700 rounded-lg">
+                                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-900">
+                                            <a href="{{ Storage::url($document->file_path) }}" target="_blank" class="hover:underline">
+                                                {{ $document->original_name }}
+                                            </a>
+                                        </p>
+                                        <p class="text-xs text-slate-500 mt-1">
+                                            <span>Formato: {{ strtoupper($document->file_type) }}</span>
+                                            <span class="mx-1.5">&bull;</span>
+                                            <span>Subido por: {{ $document->uploadedBy->name }}</span>
+                                            <span class="mx-1.5">&bull;</span>
+                                            <span>Fecha: {{ $document->created_at->format('d/m/Y H:i') }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                @if ($project->status === 'in_progress' && (auth()->user()->hasAnyRole(['admin', 'administration']) || auth()->id() === $project->user_id))
+                                    <form method="POST" action="{{ route('projects.documents.destroy', [$project, $document]) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-900 transition-colors">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm text-slate-500 text-center py-6">No hay documentos adjuntos para este proyecto.</p>
+                @endif
+            </div>
         </div>
     </div>
 </x-app-layout>

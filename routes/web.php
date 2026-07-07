@@ -8,6 +8,7 @@ use App\Http\Controllers\ProjectEvaluationController;
 use App\Http\Controllers\ViabilityModelConfigurationController;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectTrackingController;
+use App\Http\Controllers\ProjectDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -74,6 +75,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('projects/{project}/tracking', [ProjectTrackingController::class, 'store'])->name('projects.tracking.store');
     Route::get('projects/{project}/tracking/{tracking}/edit', [ProjectTrackingController::class, 'edit'])->name('projects.tracking.edit');
     Route::put('projects/{project}/tracking/{tracking}', [ProjectTrackingController::class, 'update'])->name('projects.tracking.update');
+
+    Route::post('projects/{project}/documents', [ProjectDocumentController::class, 'store'])->name('projects.documents.store');
+    Route::delete('projects/{project}/documents/{document}', [ProjectDocumentController::class, 'destroy'])->name('projects.documents.destroy');
 });
 
 require __DIR__.'/auth.php';
