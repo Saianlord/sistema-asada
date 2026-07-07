@@ -9,6 +9,7 @@ use App\Http\Controllers\ViabilityModelConfigurationController;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectTrackingController;
 use App\Http\Controllers\ProjectDocumentController;
+use App\Http\Controllers\ProjectDocumentRecordController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -78,6 +79,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('projects/{project}/documents', [ProjectDocumentController::class, 'store'])->name('projects.documents.store');
     Route::delete('projects/{project}/documents/{document}', [ProjectDocumentController::class, 'destroy'])->name('projects.documents.destroy');
+
+    Route::get('projects/{project}/document-record', [ProjectDocumentRecordController::class, 'index'])->name('projects.document-record.index');
+    Route::get('projects/{project}/document-record/{document}/download', [ProjectDocumentRecordController::class, 'download'])->name('projects.document-record.download');
 });
 
 require __DIR__.'/auth.php';
