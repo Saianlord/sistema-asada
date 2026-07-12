@@ -36,4 +36,13 @@ class ProjectSupportController extends Controller
 
         return redirect()->route('projects.show', $project)->with('success', 'Información de respaldo guardada exitosamente.');
     }
+
+    public function downloadEvidence(Project $project)
+    {
+        if (!$project->evidence_path || !Storage::disk('public')->exists($project->evidence_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->response($project->evidence_path);
+    }
 }

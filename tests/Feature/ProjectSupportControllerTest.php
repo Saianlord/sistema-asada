@@ -156,4 +156,45 @@ class ProjectSupportControllerTest extends TestCase
         ]);
         $response->assertSessionHasErrors(['evidence']);
     }
+
+    public function test_authenticated_user_can_download_project_evidence(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::first();
+        $file = UploadedFile::fake()->create('evidence.pdf', 500, 'application/pdf');
+        $path = Storage::disk('public')->putFile('projects/evidences', $file);
+
+        $project = Project::create([
+            'title' => 'Project 6',
+            'description' => 'Desc 6',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'technical_justification' => 'Technical justification',
+            'estimated_cost' => 500.00,
+            'impact' => 'High',
+            'risk' => 'Low',
+            'evidence_path' => $path,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.evidence.download', $project));
+        $response->assertStatus(200);
+        $this->assertEquals('application/pdf', $response->headers->get('content-type'));
+    }
+
+    public function test_cannot_download_nonexistent_evidence(): void
+    {
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Project 7',
+            'description' => 'Desc 7',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.evidence.download', $project));
+        $response->assertStatus(404);
+    }
 }
