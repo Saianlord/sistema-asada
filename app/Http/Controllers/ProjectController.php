@@ -83,6 +83,40 @@ class ProjectController extends Controller
         return redirect()->route('projects.show', $project)->with('success', 'Iniciativa de proyecto actualizada exitosamente.');
     }
 
+    public function reports(Request $request): View
+    {
+        $query = Project::with('user');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('criticality')) {
+            $query->where('criticality', $request->criticality);
+        }
+
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        $projects = $query->get();
+
+        $summary = [
+            'total' => $projects->count(),
+            'pending' => $projects->where('status', 'pending')->count(),
+            'approved' => $projects->where('status', 'approved')->count(),
+            'closed' => $projects->where('status', 'closed')->count(),
+            'low' => $projects->where('criticality', 'low')->count(),
+            'medium' => $projects->where('criticality', 'medium')->count(),
+            'high' => $projects->where('criticality', 'high')->count(),
+            'low_priority' => $projects->where('priority', 'low')->count(),
+            'medium_priority' => $projects->where('priority', 'medium')->count(),
+            'high_priority' => $projects->where('priority', 'high')->count(),
+        ];
+
+        return view('projects.reports', compact('projects', 'summary'));
+    }
+
     public function prioritization(): View
     {
         $projects = Project::with('evaluations')
