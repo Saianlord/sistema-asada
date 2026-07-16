@@ -117,6 +117,26 @@ class ProjectController extends Controller
         return view('projects.reports', compact('projects', 'summary'));
     }
 
+    public function budgetReport(): View
+    {
+        $projects = Project::with('user')
+            ->whereNotNull('estimated_cost')
+            ->orderByDesc('estimated_cost')
+            ->get();
+
+        $totalBudget = $projects->sum('estimated_cost');
+        $averageProgress = $projects->isEmpty()
+            ? 0
+            : round($projects->map(fn ($project) => match ($project->priority) {
+                'high' => 75,
+                'medium' => 50,
+                'low' => 25,
+                default => 0,
+            })->avg(), 2);
+
+        return view('projects.budget-report', compact('projects', 'totalBudget', 'averageProgress'));
+    }
+
     public function prioritization(): View
     {
         $projects = Project::with('evaluations')

@@ -35,6 +35,10 @@ Route::middleware(['auth'])->group(function () {
         Route::put('projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     });
 
+    Route::middleware(['role:admin|administration'])->group(function () {
+        Route::get('projects/budget-report', [ProjectController::class, 'budgetReport'])->name('projects.budget-report');
+    });
+
     Route::middleware(['role:admin|operations'])->group(function () {
         Route::get('projects/{project}/support/edit', [ProjectSupportController::class, 'edit'])->name('projects.support.edit');
         Route::put('projects/{project}/support', [ProjectSupportController::class, 'update'])->name('projects.support.update');

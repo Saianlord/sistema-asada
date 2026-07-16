@@ -45,6 +45,14 @@
                         Priorización
                     </a>
                     @endhasanyrole
+                    @hasanyrole('admin|administration')
+                    <a href="{{ route('projects.budget-report') }}" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('projects.budget-report') ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 hover:text-white' }}">
+                        <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3v1h6v-1c0-1.657-1.343-3-3-3zm-6 6h12a2 2 0 012 2v1H4v-1a2 2 0 012-2z" />
+                        </svg>
+                        Ejecución
+                    </a>
+                    @endhasanyrole
                     @role('admin')
                     <a href="{{ route('users.index') }}" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('users.*') ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 hover:text-white' }}">
                         <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
