@@ -12,7 +12,7 @@ class ProjectEvaluationController extends Controller
 {
     public function create(Project $project): View|RedirectResponse
     {
-        if ($project->status !== 'pending') {
+        if (in_array($project->status, ['approved', 'rejected', 'closed'])) {
             return redirect()->route('projects.show', $project)
                 ->with('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
         }
@@ -31,7 +31,7 @@ class ProjectEvaluationController extends Controller
 
     public function store(StoreProjectEvaluationRequest $request, Project $project): RedirectResponse
     {
-        if ($project->status !== 'pending') {
+        if (in_array($project->status, ['approved', 'rejected', 'closed'])) {
             return redirect()->route('projects.show', $project)
                 ->with('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
         }
@@ -60,7 +60,7 @@ class ProjectEvaluationController extends Controller
 
     public function edit(Project $project, ProjectEvaluation $evaluation): View|RedirectResponse
     {
-        if ($project->status !== 'pending') {
+        if (in_array($project->status, ['approved', 'rejected', 'closed'])) {
             return redirect()->route('projects.show', $project)
                 ->with('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
         }
@@ -74,7 +74,7 @@ class ProjectEvaluationController extends Controller
 
     public function update(StoreProjectEvaluationRequest $request, Project $project, ProjectEvaluation $evaluation): RedirectResponse
     {
-        if ($project->status !== 'pending') {
+        if (in_array($project->status, ['approved', 'rejected', 'closed'])) {
             return redirect()->route('projects.show', $project)
                 ->with('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
         }

@@ -51,7 +51,7 @@ class ProjectKanbanTest extends TestCase
 
         $response = $this->actingAs($admin)->get(route('projects.kanban.index', $project));
         $response->assertRedirect(route('projects.show', $project));
-        $response->assertSessionHas('error', 'Solo se puede acceder al tablero Kanban de proyectos en ejecución.');
+        $response->assertSessionHas('error', 'Solo se puede acceder al tablero Kanban de proyectos en ejecución, pausados o finalizados.');
     }
 
     public function test_authorized_user_can_create_task(): void
@@ -308,7 +308,7 @@ class ProjectKanbanTest extends TestCase
         ]);
 
         $response = $this->actingAs($admin)->get(route('projects.show', $projectPending));
-        $response->assertDontSee('Tablero Kanban');
+        $response->assertSee('Tablero Kanban');
 
         $response = $this->actingAs($admin)->get(route('projects.show', $projectExecution));
         $response->assertSee('Tablero Kanban');

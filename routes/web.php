@@ -45,12 +45,15 @@ Route::middleware(['auth'])->group(function () {
         Route::put('projects/{project}/support', [ProjectSupportController::class, 'update'])->name('projects.support.update');
     });
 
-    Route::middleware(['role:admin|junta'])->group(function () {
-        Route::get('prioritization', [ProjectController::class, 'prioritization'])->name('projects.prioritization');
+    Route::middleware(['role:admin|junta|operations'])->group(function () {
         Route::get('projects/{project}/evaluate', [ProjectEvaluationController::class, 'create'])->name('evaluations.create');
         Route::post('projects/{project}/evaluate', [ProjectEvaluationController::class, 'store'])->name('evaluations.store');
         Route::get('projects/{project}/evaluations/{evaluation}/edit', [ProjectEvaluationController::class, 'edit'])->name('evaluations.edit');
         Route::put('projects/{project}/evaluations/{evaluation}', [ProjectEvaluationController::class, 'update'])->name('evaluations.update');
+    });
+
+    Route::middleware(['role:admin|junta'])->group(function () {
+        Route::get('prioritization', [ProjectController::class, 'prioritization'])->name('projects.prioritization');
         Route::get('viability-config', [ViabilityModelConfigurationController::class, 'edit'])->name('viability-config.edit');
         Route::put('viability-config', [ViabilityModelConfigurationController::class, 'update'])->name('viability-config.update');
         Route::patch('projects/{project}/approve', [ProjectController::class, 'approve'])->name('projects.approve');

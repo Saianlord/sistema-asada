@@ -21,7 +21,7 @@ class UpdateProjectSupportRequest extends FormRequest
             'estimated_cost' => ['required', 'numeric', 'min:0'],
             'impact' => ['required', 'string'],
             'risk' => ['required', 'string'],
-            'evidence' => [$hasEvidence ? 'nullable' : 'required', 'file', 'max:10240', 'mimes:pdf,png,jpg,jpeg'],
+            'evidence' => ['nullable', 'file', 'max:10240', 'mimes:pdf,png,jpg,jpeg'],
         ];
     }
 
