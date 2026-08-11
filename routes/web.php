@@ -10,6 +10,7 @@ use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectTrackingController;
 use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\ProjectDocumentRecordController;
+use App\Http\Controllers\ProjectHistoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -81,6 +82,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('projects/{project}/document-record', [ProjectDocumentRecordController::class, 'index'])->name('projects.document-record.index');
     Route::get('projects/{project}/document-record/{document}/download', [ProjectDocumentRecordController::class, 'download'])->name('projects.document-record.download');
+
+    Route::get('projects/{project}/history', [ProjectHistoryController::class, 'index'])->name('projects.history.index');
 });
 
 require __DIR__.'/auth.php';
