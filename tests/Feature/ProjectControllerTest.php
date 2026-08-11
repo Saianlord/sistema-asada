@@ -487,11 +487,11 @@ class ProjectControllerTest extends TestCase
 
         $responseApprove = $this->actingAs($admin)->patch(route('projects.approve', $projectApproved));
         $responseApprove->assertRedirect(route('projects.show', $projectApproved));
-        $responseApprove->assertSessionHas('error', 'Solo los proyectos en estado pendiente pueden ser aprobados o rechazados.');
+        $responseApprove->assertSessionHas('error', 'Solo los proyectos en estado pendiente, en análisis o priorizados pueden ser aprobados.');
 
         $responseReject = $this->actingAs($admin)->patch(route('projects.reject', $projectApproved));
         $responseReject->assertRedirect(route('projects.show', $projectApproved));
-        $responseReject->assertSessionHas('error', 'Solo los proyectos en estado pendiente pueden ser aprobados o rechazados.');
+        $responseReject->assertSessionHas('error', 'Solo los proyectos en estado pendiente, en análisis o priorizados pueden ser rechazados.');
     }
 
     public function test_rejected_project_cannot_be_edited_or_updated(): void

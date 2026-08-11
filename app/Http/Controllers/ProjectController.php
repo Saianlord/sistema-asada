@@ -105,8 +105,8 @@ class ProjectController extends Controller
 
     public function approve(Project $project): RedirectResponse
     {
-        if ($project->status !== 'pending') {
-            return redirect()->route('projects.show', $project)->with('error', 'Solo los proyectos en estado pendiente pueden ser aprobados o rechazados.');
+        if (!in_array($project->status, ['pending', 'en_analisis', 'prioritized'])) {
+            return redirect()->route('projects.show', $project)->with('error', 'Solo los proyectos en estado pendiente, en análisis o priorizados pueden ser aprobados.');
         }
 
         if (is_null($project->estimated_cost) || $project->estimated_cost <= 0) {
@@ -120,8 +120,8 @@ class ProjectController extends Controller
 
     public function reject(Project $project): RedirectResponse
     {
-        if ($project->status !== 'pending') {
-            return redirect()->route('projects.show', $project)->with('error', 'Solo los proyectos en estado pendiente pueden ser aprobados o rechazados.');
+        if (!in_array($project->status, ['pending', 'en_analisis', 'prioritized'])) {
+            return redirect()->route('projects.show', $project)->with('error', 'Solo los proyectos en estado pendiente, en análisis o priorizados pueden ser rechazados.');
         }
 
         $project->update(['status' => 'rejected']);
@@ -165,14 +165,8 @@ class ProjectController extends Controller
         }
 
         $request->validate([
-            'status' => 'required|string|in:pending,en_analisis,prioritized,approved,in_progress,paused,closed',
+            'status' => 'required|string|in:pending,en_analisis,prioritized,in_progress,paused,closed',
         ]);
-
-        if ($request->status === 'approved') {
-            if (is_null($project->estimated_cost) || $project->estimated_cost <= 0) {
-                return redirect()->route('projects.show', $project)->with('error', 'No se puede aprobar el proyecto porque no tiene presupuesto disponible.');
-            }
-        }
 
         $project->update(['status' => $request->status]);
 

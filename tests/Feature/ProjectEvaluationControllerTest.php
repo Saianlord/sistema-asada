@@ -56,7 +56,7 @@ class ProjectEvaluationControllerTest extends TestCase
     {
         $project = $this->createProject();
         $operator = User::factory()->create();
-        $operator->assignRole('operations');
+        $operator->assignRole('administration');
 
         $response = $this->actingAs($operator)->get(route('evaluations.create', $project));
         $response->assertStatus(403);
@@ -405,8 +405,8 @@ class ProjectEvaluationControllerTest extends TestCase
 
             $response = $this->actingAs($juntaUser)->get(route('projects.show', $project));
             $response->assertStatus(200);
-            $response->assertDontSee('Evaluar Proyecto');
-            $response->assertDontSee('Editar Mi Evaluación');
+            $response->assertSee('Evaluar Proyecto');
+            $response->assertSee('opacity-50 cursor-not-allowed');
         }
     }
 }

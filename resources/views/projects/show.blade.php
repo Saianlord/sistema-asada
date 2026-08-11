@@ -15,40 +15,45 @@
                     Volver al listado
                 </a>
                 <div class="flex items-center gap-3">
-                    @hasanyrole('admin|administration|fiscal')
+                    @if(auth()->user()->hasAnyRole(['admin', 'administration', 'fiscal']) || auth()->id() === $project->user_id)
                         <a href="{{ route('projects.history.index', $project) }}" class="inline-flex items-center px-4 py-2 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm transition-colors">
                             <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Ver Historial
                         </a>
-                    @endhasanyrole
-                    @hasanyrole('admin|junta')
-                    @if ($project->status === 'pending')
+                    @endif
+
+                    @hasanyrole('admin|junta|operations')
                         @php
                             $userEvaluation = $project->evaluations->where('user_id', auth()->id())->first();
+                            $canEvaluate = in_array($project->status, ['pending', 'en_analisis', 'prioritized']);
                         @endphp
                         @if ($userEvaluation)
-                            <a href="{{ route('evaluations.edit', [$project, $userEvaluation]) }}" class="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                            <a href="{{ $canEvaluate ? route('evaluations.edit', [$project, $userEvaluation]) : '#' }}" class="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canEvaluate ? 'opacity-50 cursor-not-allowed' : '' }}" {!! !$canEvaluate ? 'title="El proyecto ya no puede ser evaluado."' : '' !!}>
                                 <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                                 Editar Mi Evaluación
                             </a>
                         @else
-                            <a href="{{ route('evaluations.create', $project) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                            <a href="{{ $canEvaluate ? route('evaluations.create', $project) : '#' }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canEvaluate ? 'opacity-50 cursor-not-allowed' : '' }}" {!! !$canEvaluate ? 'title="El proyecto ya no puede ser evaluado."' : '' !!}>
                                 <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                                 </svg>
                                 Evaluar Proyecto
                             </a>
                         @endif
-                    @endif
-                    @if ($project->status === 'pending')
+                    @endhasanyrole
+
+                    @hasanyrole('admin|junta')
+                        @php
+                            $canApprove = in_array($project->status, ['pending', 'en_analisis', 'prioritized']);
+                        @endphp
                         <form method="POST" action="{{ route('projects.approve', $project) }}" class="inline">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors" onclick="return confirm('¿Estás seguro de que deseas aprobar este proyecto?');">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canApprove ? 'opacity-50 cursor-not-allowed' : '' }}" {!! $canApprove ? 'onclick="return confirm(\'¿Estás seguro de que deseas aprobar este proyecto?\');"' : 'disabled title="El proyecto debe estar pendiente, en análisis o priorizado para ser aprobado."' !!}>
                                 <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
@@ -58,33 +63,36 @@
                         <form method="POST" action="{{ route('projects.reject', $project) }}" class="inline">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors" onclick="return confirm('¿Estás seguro de que deseas rechazar este proyecto?');">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canApprove ? 'opacity-50 cursor-not-allowed' : '' }}" {!! $canApprove ? 'onclick="return confirm(\'¿Estás seguro de que deseas rechazar este proyecto?\');"' : 'disabled title="El proyecto debe estar pendiente, en análisis o priorizado para ser rechazado."' !!}>
                                 <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                                 Rechazar Proyecto
                             </button>
                         </form>
-                    @endif
                     @endhasanyrole
+
                     @hasanyrole('admin|administration')
-                    @if (!in_array($project->status, ['approved', 'rejected', 'closed']))
-                        <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                        @php
+                            $canEdit = !in_array($project->status, ['approved', 'rejected', 'closed']);
+                        @endphp
+                        <a href="{{ $canEdit ? route('projects.edit', $project) : '#' }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canEdit ? 'opacity-50 cursor-not-allowed' : '' }}" {!! !$canEdit ? 'title="No se puede editar un proyecto aprobado, rechazado o cerrado."' : '' !!}>
                             <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                             Editar Iniciativa
                         </a>
-                    @endif
                     @endhasanyrole
-                    @if ($project->status === 'in_progress')
-                        <a href="{{ route('projects.kanban.index', $project) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
-                            <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                            Tablero Kanban
-                        </a>
-                    @endif
+
+                    @php
+                        $canKanban = in_array($project->status, ['in_progress', 'paused', 'closed']);
+                    @endphp
+                    <a href="{{ $canKanban ? route('projects.kanban.index', $project) : '#' }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canKanban ? 'opacity-50 cursor-not-allowed' : '' }}" {!! !$canKanban ? 'title="El tablero Kanban solo está disponible para proyectos en ejecución, pausados o cerrados."' : '' !!}>
+                        <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Tablero Kanban
+                    </a>
                     <a href="{{ route('projects.document-record.index', $project) }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                         <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />

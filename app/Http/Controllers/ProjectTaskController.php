@@ -15,8 +15,8 @@ class ProjectTaskController extends Controller
 {
     public function index(Project $project): View|RedirectResponse
     {
-        if ($project->status !== 'in_progress') {
-            return redirect()->route('projects.show', $project)->with('error', 'Solo se puede acceder al tablero Kanban de proyectos en ejecución.');
+        if (!in_array($project->status, ['in_progress', 'paused', 'closed'])) {
+            return redirect()->route('projects.show', $project)->with('error', 'Solo se puede acceder al tablero Kanban de proyectos en ejecución, pausados o finalizados.');
         }
 
         $tasks = $project->tasks()->with('assignedUser')->get();

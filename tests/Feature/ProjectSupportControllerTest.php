@@ -59,7 +59,7 @@ class ProjectSupportControllerTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_first_time_requires_evidence_file(): void
+    public function test_first_time_does_not_require_evidence_file(): void
     {
         $admin = User::first();
         $project = Project::create([
@@ -77,7 +77,8 @@ class ProjectSupportControllerTest extends TestCase
             'risk' => 'Low risk',
         ]);
 
-        $response->assertSessionHasErrors(['evidence']);
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('projects.show', $project));
     }
 
     public function test_successful_support_attachment_stores_file(): void

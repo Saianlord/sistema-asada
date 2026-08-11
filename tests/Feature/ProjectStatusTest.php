@@ -172,9 +172,7 @@ class ProjectStatusTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $response = $this->actingAs($admin)->patch(route('projects.status.update', $project), [
-            'status' => 'approved',
-        ]);
+        $response = $this->actingAs($admin)->patch(route('projects.approve', $project));
 
         $response->assertRedirect(route('projects.show', $project));
         $response->assertSessionHas('error', 'No se puede aprobar el proyecto porque no tiene presupuesto disponible.');
@@ -182,12 +180,10 @@ class ProjectStatusTest extends TestCase
 
         $project->update(['estimated_cost' => 5000]);
 
-        $response = $this->actingAs($admin)->patch(route('projects.status.update', $project), [
-            'status' => 'approved',
-        ]);
+        $response = $this->actingAs($admin)->patch(route('projects.approve', $project));
 
         $response->assertRedirect(route('projects.show', $project));
-        $response->assertSessionHas('success', 'Estado del proyecto actualizado exitosamente.');
+        $response->assertSessionHas('success', 'Proyecto aprobado exitosamente.');
         $this->assertEquals('approved', $project->fresh()->status);
     }
 }
