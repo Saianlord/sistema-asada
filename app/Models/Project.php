@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\ViabilityModelConfiguration;
 
 class Project extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\Auditable;
 
     protected $fillable = [
         'title',
@@ -23,6 +24,10 @@ class Project extends Model
         'impact',
         'risk',
         'evidence_path',
+        'approval_agreement',
+        'approval_date',
+        'approval_responsible',
+        'approval_justification',
     ];
 
     public function user(): BelongsTo
@@ -57,10 +62,28 @@ class Project extends Model
             return null;
         }
 
+        $config = ViabilityModelConfiguration::getActive();
+
         return match (true) {
-            $score >= 7.0 => 'viable',
-            $score >= 4.0 => 'conditional',
+            $score >= $config->viable_threshold => 'viable',
+            $score >= $config->conditional_threshold => 'conditional',
             default => 'not_viable',
         };
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        $labels = [
+            'pending' => 'Registrado',
+            'en_analisis' => 'En análisis',
+            'prioritized' => 'Priorizado',
+            'approved' => 'Aprobado',
+            'in_progress' => 'En ejecución',
+            'paused' => 'Pausado',
+            'closed' => 'Finalizado',
+            'rejected' => 'Rechazado',
+        ];
+
+        return $labels[$this->status] ?? $this->status;
     }
 }

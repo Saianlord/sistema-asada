@@ -15,35 +15,73 @@
                     Volver al listado
                 </a>
                 <div class="flex items-center gap-3">
-                    @hasanyrole('admin|junta')
-                    @php
-                        $userEvaluation = $project->evaluations->where('user_id', auth()->id())->first();
-                    @endphp
-                    @if ($userEvaluation)
-                        <a href="{{ route('evaluations.edit', [$project, $userEvaluation]) }}" class="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                    @if(auth()->user()->hasAnyRole(['admin', 'administration', 'fiscal']) || auth()->id() === $project->user_id)
+                        <a href="{{ route('projects.history.index', $project) }}" class="inline-flex items-center px-4 py-2 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm transition-colors">
                             <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Editar Mi Evaluación
-                        </a>
-                    @else
-                        <a href="{{ route('evaluations.create', $project) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
-                            <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                            </svg>
-                            Evaluar Proyecto
+                            Ver Historial
                         </a>
                     @endif
+
+                    @hasanyrole('admin|junta|operations')
+                        @php
+                            $userEvaluation = $project->evaluations->where('user_id', auth()->id())->first();
+                            $canEvaluate = in_array($project->status, ['pending', 'en_analisis', 'prioritized']);
+                        @endphp
+                        @if ($userEvaluation)
+                            <a href="{{ $canEvaluate ? route('evaluations.edit', [$project, $userEvaluation]) : '#' }}" class="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canEvaluate ? 'opacity-50 cursor-not-allowed' : '' }}" {!! !$canEvaluate ? 'title="El proyecto ya no puede ser evaluado."' : '' !!}>
+                                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Editar Mi Evaluación
+                            </a>
+                        @else
+                            <a href="{{ $canEvaluate ? route('evaluations.create', $project) : '#' }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canEvaluate ? 'opacity-50 cursor-not-allowed' : '' }}" {!! !$canEvaluate ? 'title="El proyecto ya no puede ser evaluado."' : '' !!}>
+                                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                                Evaluar Proyecto
+                            </a>
+                        @endif
                     @endhasanyrole
+
+                    @hasanyrole('admin|junta')
+                        @php
+                            $canApprove = in_array($project->status, ['pending', 'en_analisis', 'prioritized']);
+                        @endphp
+                        <form method="POST" action="{{ route('projects.approve', $project) }}" class="inline">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canApprove ? 'opacity-50 cursor-not-allowed' : '' }}" {!! $canApprove ? 'onclick="return confirm(\'¿Estás seguro de que deseas aprobar este proyecto?\');"' : 'disabled title="El proyecto debe estar pendiente, en análisis o priorizado para ser aprobado."' !!}>
+                                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Aprobar Proyecto
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('projects.reject', $project) }}" class="inline">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canApprove ? 'opacity-50 cursor-not-allowed' : '' }}" {!! $canApprove ? 'onclick="return confirm(\'¿Estás seguro de que deseas rechazar este proyecto?\');"' : 'disabled title="El proyecto debe estar pendiente, en análisis o priorizado para ser rechazado."' !!}>
+                                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Rechazar Proyecto
+                            </button>
+                        </form>
+                    @endhasanyrole
+
                     @hasanyrole('admin|administration')
-                    @if (!in_array($project->status, ['approved', 'closed']))
-                        <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                        @php
+                            $canEdit = !in_array($project->status, ['approved', 'rejected', 'closed']);
+                        @endphp
+                        <a href="{{ $canEdit ? route('projects.edit', $project) : '#' }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canEdit ? 'opacity-50 cursor-not-allowed' : '' }}" {!! !$canEdit ? 'title="No se puede editar un proyecto aprobado, rechazado o cerrado."' : '' !!}>
                             <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                             Editar Iniciativa
                         </a>
-                    @endif
                     @endhasanyrole
                     @role('fiscal')
                     <a href="{{ route('projects.history.index', $project) }}" class="inline-flex items-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
@@ -74,6 +112,14 @@
                 </div>
             @endif
 
+            @hasrole('junta')
+                @if (is_null($project->estimated_cost) || $project->estimated_cost <= 0)
+                    <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm font-medium">
+                        No se encontró presupuesto asignado para esta iniciativa. No será posible aprobarla hasta que se asigne presupuesto.
+                    </div>
+                @endif
+            @endhasrole
+
             <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-8">
                 <div class="flex justify-between items-start border-b border-slate-100 pb-6">
                     <div>
@@ -86,23 +132,85 @@
                     <div>
                         @if ($project->status === 'pending')
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                                Pendiente
+                                Registrado
+                            </span>
+                        @elseif ($project->status === 'en_analisis')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-indigo-100 text-indigo-800">
+                                En análisis
+                            </span>
+                        @elseif ($project->status === 'prioritized')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 text-purple-800">
+                                Priorizado
                             </span>
                         @elseif ($project->status === 'approved')
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
                                 Aprobado
                             </span>
+                        @elseif ($project->status === 'in_progress')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                                En ejecución
+                            </span>
+                        @elseif ($project->status === 'paused')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 text-amber-800">
+                                Pausado
+                            </span>
                         @elseif ($project->status === 'closed')
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-800">
-                                Cerrado
+                                Finalizado
+                            </span>
+                        @elseif ($project->status === 'rejected')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
+                                Rechazado
                             </span>
                         @else
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
-                                {{ $project->status }}
+                                {{ $project->status_label }}
                             </span>
                         @endif
                     </div>
                 </div>
+
+                @if ($project->status !== 'closed' && (auth()->user()->hasAnyRole(['admin', 'administration']) || auth()->id() === $project->user_id))
+                    <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg shadow-sm">
+                        <form method="POST" action="{{ route('projects.status.update', $project) }}" class="flex flex-col sm:flex-row sm:items-center gap-3">
+                            @csrf
+                            @method('PATCH')
+                            <div class="flex-1">
+                                <label for="status" class="block text-sm font-semibold text-slate-700 mb-1">Cambiar Estado del Proyecto</label>
+                                <select id="status" name="status" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-slate-700 text-sm">
+                                    <option value="pending" {{ $project->status === 'pending' ? 'selected' : '' }}>Registrado</option>
+                                    <option value="en_analisis" {{ $project->status === 'en_analisis' ? 'selected' : '' }}>En análisis</option>
+                                    <option value="prioritized" {{ $project->status === 'prioritized' ? 'selected' : '' }}>Priorizado</option>
+                                    <option value="approved" {{ $project->status === 'approved' ? 'selected' : '' }}>Aprobado</option>
+                                    <option value="in_progress" {{ $project->status === 'in_progress' ? 'selected' : '' }}>En ejecución</option>
+                                    <option value="paused" {{ $project->status === 'paused' ? 'selected' : '' }}>Pausado</option>
+                                    <option value="closed" {{ $project->status === 'closed' ? 'selected' : '' }}>Finalizado</option>
+                                </select>
+                            </div>
+                            <div class="sm:self-end">
+                                <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                                    Actualizar Estado
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                @endif
+
+                @if ($project->approval_agreement)
+                    <div class="mt-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
+                        <h4 class="text-sm font-semibold text-slate-900">Registro de Aprobación</h4>
+                        <p class="text-sm text-slate-600 mt-2">Acuerdo: <span class="font-medium text-slate-800">{{ $project->approval_agreement }}</span></p>
+                        <p class="text-sm text-slate-600">Fecha: <span class="font-medium text-slate-800">{{ optional($project->approval_date)->format('d/m/Y') }}</span></p>
+                        <p class="text-sm text-slate-600">Responsable: <span class="font-medium text-slate-800">{{ $project->approval_responsible }}</span></p>
+                        <div class="mt-2 text-sm text-slate-700 bg-slate-50 p-3 rounded-md border border-slate-100">{{ $project->approval_justification }}</div>
+                    </div>
+                @elseif ($project->status === 'approved')
+                    @hasanyrole('admin|administration')
+                        <div class="mt-4">
+                            <a href="{{ route('projects.approval.create', $project) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">Registrar Acuerdo</a>
+                        </div>
+                    @endhasanyrole
+                @endif
 
                 <div class="mt-8 space-y-6">
                     <div>
@@ -172,7 +280,7 @@
                                             <svg class="h-5 w-5 text-slate-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
-                                            <a href="{{ asset('storage/' . $project->evidence_path) }}" target="_blank" class="text-sm font-medium text-blue-600 hover:text-blue-800 underline">
+                                            <a href="{{ route('projects.evidence.download', $project) }}" target="_blank" class="text-sm font-medium text-blue-600 hover:text-blue-800 underline">
                                                 Ver Evidencia
                                             </a>
                                         </div>
@@ -279,6 +387,117 @@
                         @endif
                     </div>
                 </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-8 mt-6">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                    <h3 class="text-lg font-bold text-slate-900">Seguimiento del Proyecto</h3>
+                    @if ($project->status === 'in_progress' && (auth()->user()->hasAnyRole(['admin', 'administration']) || auth()->id() === $project->user_id))
+                        <a href="{{ route('projects.tracking.create', $project) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                            Registrar Seguimiento
+                        </a>
+                    @endif
+                </div>
+
+                @if ($project->trackings->count() > 0)
+                    <div class="space-y-6">
+                        @foreach ($project->trackings as $tracking)
+                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center gap-3">
+                                        @php
+                                            $badgeClasses = [
+                                                'milestone' => 'bg-purple-100 text-purple-800',
+                                                'progress' => 'bg-green-100 text-green-800',
+                                                'incident' => 'bg-red-100 text-red-800',
+                                            ][$tracking->type] ?? 'bg-slate-100 text-slate-800';
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $badgeClasses }}">
+                                            {{ $tracking->type_label }}
+                                        </span>
+                                        <h4 class="text-sm font-bold text-slate-900">{{ $tracking->title }}</h4>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <span class="text-xs text-slate-500 font-medium">{{ \Carbon\Carbon::parse($tracking->date)->format('d/m/Y') }}</span>
+                                        @if ($project->status === 'in_progress' && (auth()->user()->hasAnyRole(['admin', 'administration']) || auth()->id() === $project->user_id))
+                                            <a href="{{ route('projects.tracking.edit', [$project, $tracking]) }}" class="text-xs font-semibold text-blue-600 hover:text-blue-900 transition-colors">
+                                                Editar
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+                                <p class="text-sm text-slate-700 whitespace-pre-wrap">{{ $tracking->description }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm text-slate-500 text-center py-6">No hay registros de seguimiento para este proyecto.</p>
+                @endif
+            </div>
+
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-8 mt-6">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <h3 class="text-lg font-bold text-slate-900">Documentos del Proyecto</h3>
+                </div>
+
+                @if ($project->status === 'in_progress' && (auth()->user()->hasAnyRole(['admin', 'administration']) || auth()->id() === $project->user_id))
+                    <form method="POST" action="{{ route('projects.documents.store', $project) }}" enctype="multipart/form-data" class="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                        @csrf
+                        <div class="flex flex-col sm:flex-row items-end gap-4">
+                            <div class="flex-1 w-full">
+                                <label for="document" class="block text-sm font-medium text-slate-700 mb-1">Adjuntar archivo (PDF, JPG, JPEG, PNG, DOC, DOCX, XLS, XLSX - Máx. 10MB)</label>
+                                <input type="file" name="document" id="document" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                            </div>
+                            <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                                Adjuntar Documento
+                            </button>
+                        </div>
+                        @error('document')
+                            <p class="text-xs text-red-600 mt-2">{{ $message }}</p>
+                        @enderror
+                    </form>
+                @endif
+
+                @if ($project->documents->count() > 0)
+                    <div class="space-y-4">
+                        @foreach ($project->documents as $document)
+                            <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <div class="p-2 bg-blue-100 text-blue-700 rounded-lg">
+                                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-900">
+                                            <a href="{{ Storage::url($document->file_path) }}" target="_blank" class="hover:underline">
+                                                {{ $document->original_name }}
+                                            </a>
+                                        </p>
+                                        <p class="text-xs text-slate-500 mt-1">
+                                            <span>Formato: {{ strtoupper($document->file_type) }}</span>
+                                            <span class="mx-1.5">&bull;</span>
+                                            <span>Subido por: {{ $document->uploadedBy->name }}</span>
+                                            <span class="mx-1.5">&bull;</span>
+                                            <span>Fecha: {{ $document->created_at->format('d/m/Y H:i') }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                @if ($project->status === 'in_progress' && (auth()->user()->hasAnyRole(['admin', 'administration']) || auth()->id() === $project->user_id))
+                                    <form method="POST" action="{{ route('projects.documents.destroy', [$project, $document]) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-900 transition-colors">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm text-slate-500 text-center py-6">No hay documentos adjuntos para este proyecto.</p>
+                @endif
             </div>
         </div>
     </div>

@@ -56,7 +56,7 @@ class ProjectEvaluationControllerTest extends TestCase
     {
         $project = $this->createProject();
         $operator = User::factory()->create();
-        $operator->assignRole('operations');
+        $operator->assignRole('administration');
 
         $response = $this->actingAs($operator)->get(route('evaluations.create', $project));
         $response->assertStatus(403);
@@ -290,5 +290,123 @@ class ProjectEvaluationControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Este proyecto aún no cuenta con evaluaciones registradas.');
         $response->assertSee('No es posible generar un dictamen de viabilidad sin evaluaciones.');
+    }
+
+    public function test_cannot_access_evaluation_form_if_project_is_not_pending(): void
+    {
+        $juntaUser = User::factory()->create();
+        $juntaUser->assignRole('junta');
+
+        foreach (['approved', 'rejected', 'closed'] as $status) {
+            $project = $this->createProject();
+            $project->update(['status' => $status]);
+
+            $response = $this->actingAs($juntaUser)->get(route('evaluations.create', $project));
+
+            $response->assertRedirect(route('projects.show', $project));
+            $response->assertSessionHas('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
+        }
+    }
+
+    public function test_cannot_store_evaluation_if_project_is_not_pending(): void
+    {
+        $juntaUser = User::factory()->create();
+        $juntaUser->assignRole('junta');
+
+        foreach (['approved', 'rejected', 'closed'] as $status) {
+            $project = $this->createProject();
+            $project->update(['status' => $status]);
+
+            $response = $this->actingAs($juntaUser)->post(route('evaluations.store', $project), [
+                'technical_score' => 8,
+                'financial_score' => 7,
+                'operational_score' => 9,
+                'regulatory_score' => 6,
+            ]);
+
+            $response->assertRedirect(route('projects.show', $project));
+            $response->assertSessionHas('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
+
+            $this->assertDatabaseMissing('project_evaluations', [
+                'project_id' => $project->id,
+                'user_id' => $juntaUser->id,
+            ]);
+        }
+    }
+
+    public function test_cannot_edit_evaluation_if_project_is_not_pending(): void
+    {
+        $juntaUser = User::factory()->create();
+        $juntaUser->assignRole('junta');
+
+        foreach (['approved', 'rejected', 'closed'] as $status) {
+            $project = $this->createProject();
+
+            $evaluation = ProjectEvaluation::create([
+                'project_id' => $project->id,
+                'user_id' => $juntaUser->id,
+                'technical_score' => 5,
+                'financial_score' => 5,
+                'operational_score' => 5,
+                'regulatory_score' => 5,
+            ]);
+
+            $project->update(['status' => $status]);
+
+            $response = $this->actingAs($juntaUser)->get(route('evaluations.edit', [$project, $evaluation]));
+
+            $response->assertRedirect(route('projects.show', $project));
+            $response->assertSessionHas('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
+        }
+    }
+
+    public function test_cannot_update_evaluation_if_project_is_not_pending(): void
+    {
+        $juntaUser = User::factory()->create();
+        $juntaUser->assignRole('junta');
+
+        foreach (['approved', 'rejected', 'closed'] as $status) {
+            $project = $this->createProject();
+
+            $evaluation = ProjectEvaluation::create([
+                'project_id' => $project->id,
+                'user_id' => $juntaUser->id,
+                'technical_score' => 5,
+                'financial_score' => 5,
+                'operational_score' => 5,
+                'regulatory_score' => 5,
+            ]);
+
+            $project->update(['status' => $status]);
+
+            $response = $this->actingAs($juntaUser)->put(route('evaluations.update', [$project, $evaluation]), [
+                'technical_score' => 9,
+                'financial_score' => 8,
+                'operational_score' => 7,
+                'regulatory_score' => 10,
+            ]);
+
+            $response->assertRedirect(route('projects.show', $project));
+            $response->assertSessionHas('error', 'No se puede registrar ni editar la evaluación de un proyecto que ya fue aprobado, rechazado o cerrado.');
+
+            $evaluation->refresh();
+            $this->assertEquals(5, $evaluation->technical_score);
+        }
+    }
+
+    public function test_show_page_does_not_display_evaluation_buttons_if_project_is_not_pending(): void
+    {
+        $juntaUser = User::factory()->create();
+        $juntaUser->assignRole('junta');
+
+        foreach (['approved', 'rejected', 'closed'] as $status) {
+            $project = $this->createProject();
+            $project->update(['status' => $status]);
+
+            $response = $this->actingAs($juntaUser)->get(route('projects.show', $project));
+            $response->assertStatus(200);
+            $response->assertSee('Evaluar Proyecto');
+            $response->assertSee('opacity-50 cursor-not-allowed');
+        }
     }
 }

@@ -59,7 +59,7 @@ class ProjectSupportControllerTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_first_time_requires_evidence_file(): void
+    public function test_first_time_does_not_require_evidence_file(): void
     {
         $admin = User::first();
         $project = Project::create([
@@ -77,7 +77,8 @@ class ProjectSupportControllerTest extends TestCase
             'risk' => 'Low risk',
         ]);
 
-        $response->assertSessionHasErrors(['evidence']);
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('projects.show', $project));
     }
 
     public function test_successful_support_attachment_stores_file(): void
@@ -155,5 +156,46 @@ class ProjectSupportControllerTest extends TestCase
             'evidence' => $invalidFile,
         ]);
         $response->assertSessionHasErrors(['evidence']);
+    }
+
+    public function test_authenticated_user_can_download_project_evidence(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::first();
+        $file = UploadedFile::fake()->create('evidence.pdf', 500, 'application/pdf');
+        $path = Storage::disk('public')->putFile('projects/evidences', $file);
+
+        $project = Project::create([
+            'title' => 'Project 6',
+            'description' => 'Desc 6',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+            'technical_justification' => 'Technical justification',
+            'estimated_cost' => 500.00,
+            'impact' => 'High',
+            'risk' => 'Low',
+            'evidence_path' => $path,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.evidence.download', $project));
+        $response->assertStatus(200);
+        $this->assertEquals('application/pdf', $response->headers->get('content-type'));
+    }
+
+    public function test_cannot_download_nonexistent_evidence(): void
+    {
+        $admin = User::first();
+        $project = Project::create([
+            'title' => 'Project 7',
+            'description' => 'Desc 7',
+            'criticality' => 'low',
+            'priority' => 'low',
+            'user_id' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('projects.evidence.download', $project));
+        $response->assertStatus(404);
     }
 }
