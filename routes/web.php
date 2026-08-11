@@ -29,6 +29,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('users', UserController::class)->except(['show'])->missing(function () {
         return redirect()->route('users.index')->with('error', 'El usuario no existe.');
     });
+    Route::get('audit-logs', [App\Http\Controllers\GlobalAuditController::class, 'index'])->name('audit.index');
 });
 
 Route::middleware(['auth'])->group(function () {
