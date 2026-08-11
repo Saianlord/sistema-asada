@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateProjectSupportRequest;
 use App\Models\Project;
+use App\Models\ProjectHistory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -33,6 +34,15 @@ class ProjectSupportController extends Controller
         }
 
         $project->update($data);
+
+        ProjectHistory::create([
+            'project_id' => $project->id,
+            'user_id' => auth()->id(),
+            'action_type' => 'support_updated',
+            'title' => 'Información de respaldo actualizada',
+            'description' => 'Se actualizó la información de respaldo del proyecto.',
+            'details' => "Justificación técnica: {$request->technical_justification}\nCosto estimado: {$request->estimated_cost}\nImpacto: {$request->impact}\nRiesgo: {$request->risk}",
+        ]);
 
         return redirect()->route('projects.show', $project)->with('success', 'Información de respaldo guardada exitosamente.');
     }

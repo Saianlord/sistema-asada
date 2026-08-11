@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectSupportController;
 use App\Http\Controllers\ProjectEvaluationController;
+use App\Http\Controllers\ProjectHistoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -46,6 +47,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('projects/{project}/evaluate', [ProjectEvaluationController::class, 'store'])->name('evaluations.store');
         Route::get('projects/{project}/evaluations/{evaluation}/edit', [ProjectEvaluationController::class, 'edit'])->name('evaluations.edit');
         Route::put('projects/{project}/evaluations/{evaluation}', [ProjectEvaluationController::class, 'update'])->name('evaluations.update');
+    });
+
+    Route::middleware(['role:fiscal'])->group(function () {
+        Route::get('projects/{project}/history', [ProjectHistoryController::class, 'index'])->name('projects.history.index');
+        Route::get('projects/{project}/history/{history}', [ProjectHistoryController::class, 'show'])->name('projects.history.show');
     });
 
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');

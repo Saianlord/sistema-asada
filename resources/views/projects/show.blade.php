@@ -45,6 +45,14 @@
                         </a>
                     @endif
                     @endhasanyrole
+                    @role('fiscal')
+                    <a href="{{ route('projects.history.index', $project) }}" class="inline-flex items-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                        <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17l4-4 4 4m0-10l-4 4-4-4" />
+                        </svg>
+                        Ver Historial
+                    </a>
+                    @endrole
                 </div>
             </div>
 

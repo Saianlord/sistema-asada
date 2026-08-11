@@ -35,6 +35,11 @@ class Project extends Model
         return $this->hasMany(ProjectEvaluation::class);
     }
 
+    public function histories(): HasMany
+    {
+        return $this->hasMany(ProjectHistory::class);
+    }
+
     public function getAverageViabilityScoreAttribute(): ?float
     {
         if ($this->evaluations->isEmpty()) {
