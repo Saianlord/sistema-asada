@@ -83,22 +83,14 @@
                             Editar Iniciativa
                         </a>
                     @endhasanyrole
-
-                    @php
-                        $canKanban = in_array($project->status, ['in_progress', 'paused', 'closed']);
-                    @endphp
-                    <a href="{{ $canKanban ? route('projects.kanban.index', $project) : '#' }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors {{ !$canKanban ? 'opacity-50 cursor-not-allowed' : '' }}" {!! !$canKanban ? 'title="El tablero Kanban solo está disponible para proyectos en ejecución, pausados o cerrados."' : '' !!}>
+                    @role('fiscal')
+                    <a href="{{ route('projects.history.index', $project) }}" class="inline-flex items-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                         <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17l4-4 4 4m0-10l-4 4-4-4" />
                         </svg>
-                        Tablero Kanban
+                        Ver Historial
                     </a>
-                    <a href="{{ route('projects.document-record.index', $project) }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
-                        <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                        </svg>
-                        Ver Expediente Documental
-                    </a>
+                    @endrole
                 </div>
             </div>
 

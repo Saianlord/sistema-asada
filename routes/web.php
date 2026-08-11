@@ -5,11 +5,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectSupportController;
 use App\Http\Controllers\ProjectEvaluationController;
-use App\Http\Controllers\ViabilityModelConfigurationController;
-use App\Http\Controllers\ProjectTaskController;
-use App\Http\Controllers\ProjectTrackingController;
-use App\Http\Controllers\ProjectDocumentController;
-use App\Http\Controllers\ProjectDocumentRecordController;
 use App\Http\Controllers\ProjectHistoryController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,17 +47,9 @@ Route::middleware(['auth'])->group(function () {
         Route::put('projects/{project}/evaluations/{evaluation}', [ProjectEvaluationController::class, 'update'])->name('evaluations.update');
     });
 
-    Route::middleware(['role:admin|junta'])->group(function () {
-        Route::get('prioritization', [ProjectController::class, 'prioritization'])->name('projects.prioritization');
-        Route::get('viability-config', [ViabilityModelConfigurationController::class, 'edit'])->name('viability-config.edit');
-        Route::put('viability-config', [ViabilityModelConfigurationController::class, 'update'])->name('viability-config.update');
-        Route::patch('projects/{project}/approve', [ProjectController::class, 'approve'])->name('projects.approve');
-        Route::patch('projects/{project}/reject', [ProjectController::class, 'reject'])->name('projects.reject');
-    });
-
-    Route::middleware(['role:admin|administration'])->group(function () {
-        Route::get('projects/{project}/approval', [ProjectController::class, 'approvalForm'])->name('projects.approval.create');
-        Route::post('projects/{project}/approval', [ProjectController::class, 'storeApproval'])->name('projects.approval.store');
+    Route::middleware(['role:fiscal'])->group(function () {
+        Route::get('projects/{project}/history', [ProjectHistoryController::class, 'index'])->name('projects.history.index');
+        Route::get('projects/{project}/history/{history}', [ProjectHistoryController::class, 'show'])->name('projects.history.show');
     });
 
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');

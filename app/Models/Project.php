@@ -40,19 +40,9 @@ class Project extends Model
         return $this->hasMany(ProjectEvaluation::class);
     }
 
-    public function tasks(): HasMany
+    public function histories(): HasMany
     {
-        return $this->hasMany(ProjectTask::class);
-    }
-
-    public function trackings(): HasMany
-    {
-        return $this->hasMany(ProjectTracking::class);
-    }
-
-    public function documents(): HasMany
-    {
-        return $this->hasMany(ProjectDocument::class);
+        return $this->hasMany(ProjectHistory::class);
     }
 
     public function getAverageViabilityScoreAttribute(): ?float

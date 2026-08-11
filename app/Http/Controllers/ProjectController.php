@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\StoreProjectApprovalRequest;
 use App\Models\Project;
+use App\Models\ProjectHistory;
 use App\Http\Requests\UpdateProjectRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -88,6 +89,15 @@ class ProjectController extends Controller
             'description' => $request->description,
             'criticality' => $request->criticality,
             'priority' => $request->priority,
+        ]);
+
+        ProjectHistory::create([
+            'project_id' => $project->id,
+            'user_id' => auth()->id(),
+            'action_type' => 'project_updated',
+            'title' => 'Proyecto modificado',
+            'description' => 'Se actualizó la información del proyecto.',
+            'details' => "Título: {$request->title}\nCriticidad: {$request->criticality}\nPrioridad: {$request->priority}",
         ]);
 
         return redirect()->route('projects.show', $project)->with('success', 'Iniciativa de proyecto actualizada exitosamente.');
